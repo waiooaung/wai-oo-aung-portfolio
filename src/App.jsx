@@ -173,12 +173,12 @@ const Hero = ({ data }) => {
 
                     {/* Profile Links & Placeholder */}
                     <div className="md:col-span-4 flex flex-col items-center">
-                        <div className={`w-64 h-64 bg-zinc-800/50 backdrop-blur-sm rounded-full flex items-center justify-center shadow-2xl shadow-black/70 mb-8 border-4 border-teal-500/50`}>
-                            {/* Profile Photo Placeholder */}
-                            <div className={`text-teal-500 text-center font-bold text-xl p-4`}>
-                                Wai Oo Aung
-                                <div className="text-sm font-normal text-zinc-400 mt-1">Full Stack Profile</div>
-                            </div>
+                        <div className={`w-64 h-64 bg-zinc-800/50 backdrop-blur-sm rounded-full shadow-2xl shadow-black/70 mb-8 border-4 border-teal-500/50 overflow-hidden`}>
+                            <img
+                                src="https://avatars.githubusercontent.com/u/61152025?v=4"
+                                alt="Wai Oo Aung"
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                         <div className="flex space-x-6">
                             <SocialLink Icon={Linkedin} href={data.contact.linkedin} color="text-blue-500" />
