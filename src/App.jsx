@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Code, Cloud, Server, Database, Menu, X, Mail, Phone, MapPin, Linkedin, Github, Brain, Sparkles, Layers, Plug, ArrowRight, ArrowUp } from 'lucide-react';
-import headshot from './assets/headshot.jpg';
+import profilePhoto from './assets/profile-bw.jpg';
 
 // -- DATA CONSTANTS --
 const WAI_OO_AUNG_DATA = {
@@ -160,6 +160,115 @@ const useReveal = () => {
     }, []);
 };
 
+// Each letter rises out of a mask, one after another.
+const SplitText = ({ text }) => (
+    <span aria-hidden="true" className="block">
+        {text.split(' ').map((word, w, words) => (
+            <span key={w} className="inline-block overflow-hidden align-bottom pb-[0.08em]">
+                {[...word].map((ch, c) => {
+                    const index = words.slice(0, w).join('').length + c;
+                    return (
+                        <span key={c} className="inline-block animate-letter-rise" style={{ animationDelay: `${150 + index * 45}ms` }}>{ch}</span>
+                    );
+                })}
+                {w < words.length - 1 && <span className="inline-block">&nbsp;</span>}
+            </span>
+        ))}
+    </span>
+);
+
+const prefersFinePointer = () =>
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// A small dot that follows the pointer exactly, with a ring that trails behind it.
+// The ring grows over links and buttons, and shows a label over elements with data-cursor.
+const Cursor = () => {
+    const dotRef = useRef(null);
+    const ringRef = useRef(null);
+    const [enabled] = useState(prefersFinePointer);
+    const [state, setState] = useState({ hover: false, label: '', hidden: true, down: false });
+
+    useEffect(() => {
+        if (!enabled) return;
+        document.documentElement.classList.add('has-custom-cursor');
+        const pos = { x: -100, y: -100 };
+        const ring = { x: -100, y: -100 };
+        let frame;
+
+        const onMove = (e) => {
+            pos.x = e.clientX;
+            pos.y = e.clientY;
+            const target = e.target.closest('a, button, [data-cursor]');
+            const labelled = e.target.closest('[data-cursor]');
+            setState((prev) => {
+                const next = { ...prev, hidden: false, hover: !!target, label: labelled ? labelled.dataset.cursor : '' };
+                return next.hover === prev.hover && next.label === prev.label && !prev.hidden ? prev : next;
+            });
+        };
+        const onLeave = () => setState((prev) => ({ ...prev, hidden: true }));
+        const onDown = () => setState((prev) => ({ ...prev, down: true }));
+        const onUp = () => setState((prev) => ({ ...prev, down: false }));
+
+        const tick = () => {
+            ring.x += (pos.x - ring.x) * 0.18;
+            ring.y += (pos.y - ring.y) * 0.18;
+            if (dotRef.current) dotRef.current.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+            if (ringRef.current) ringRef.current.style.transform = `translate3d(${ring.x}px, ${ring.y}px, 0)`;
+            frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+
+        window.addEventListener('mousemove', onMove, { passive: true });
+        document.addEventListener('mouseleave', onLeave);
+        window.addEventListener('mousedown', onDown);
+        window.addEventListener('mouseup', onUp);
+        return () => {
+            cancelAnimationFrame(frame);
+            document.documentElement.classList.remove('has-custom-cursor');
+            window.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseleave', onLeave);
+            window.removeEventListener('mousedown', onDown);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, [enabled]);
+
+    if (!enabled) return null;
+
+    const ringSize = state.label ? 'w-20 h-20 bg-cream border-cream' : state.hover ? 'w-14 h-14 bg-cream/10 border-cream/70' : 'w-9 h-9 border-cream/50';
+    return (
+        <div aria-hidden="true" className={`pointer-events-none fixed inset-0 z-[100] transition-opacity duration-300 ${state.hidden ? 'opacity-0' : 'opacity-100'}`}>
+            <div ref={ringRef} className="absolute top-0 left-0">
+                <div className={`-translate-x-1/2 -translate-y-1/2 rounded-full border flex items-center justify-center transition-all duration-300 ease-out ${ringSize} ${state.down ? 'scale-75' : 'scale-100'}`}>
+                    <span className={`text-[10px] uppercase tracking-[0.2em] text-ink transition-opacity duration-200 ${state.label ? 'opacity-100' : 'opacity-0'}`}>{state.label}</span>
+                </div>
+            </div>
+            <div ref={dotRef} className="absolute top-0 left-0">
+                <div className={`-translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-cream transition-opacity duration-200 ${state.hover ? 'opacity-0' : 'opacity-100'}`} />
+            </div>
+        </div>
+    );
+};
+
+// Buttons marked data-magnetic lean toward the pointer when it comes close.
+const useMagnetic = () => {
+    useEffect(() => {
+        if (!prefersFinePointer()) return;
+        const els = [...document.querySelectorAll('[data-magnetic]')];
+        const onMove = (e) => {
+            els.forEach((el) => {
+                const r = el.getBoundingClientRect();
+                const dx = e.clientX - (r.left + r.width / 2);
+                const dy = e.clientY - (r.top + r.height / 2);
+                const near = Math.hypot(dx, dy) < 80;
+                el.style.transform = near ? `translate(${dx * 0.3}px, ${dy * 0.3}px)` : '';
+            });
+        };
+        window.addEventListener('mousemove', onMove, { passive: true });
+        return () => window.removeEventListener('mousemove', onMove);
+    }, []);
+};
+
 const Header = ({ name, links }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -213,7 +322,8 @@ const RoundArrow = ({ href, label, external = false }) => (
         href={href}
         aria-label={label}
         {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        className="inline-flex items-center justify-center w-12 h-12 shrink-0 rounded-full bg-cream text-ink hover:bg-white transition-all duration-300 hover:translate-x-1"
+        data-magnetic
+        className="inline-flex items-center justify-center w-12 h-12 shrink-0 rounded-full bg-cream text-ink hover:bg-white transition-[background-color,transform] duration-300 ease-out"
     >
         <ArrowRight size={18} strokeWidth={1.5} />
     </a>
@@ -222,13 +332,15 @@ const RoundArrow = ({ href, label, external = false }) => (
 const Hero = ({ data }) => (
     <section id="hero" className="max-w-6xl mx-auto px-6 pt-36 pb-24 md:pt-44 md:pb-32">
         <div className="grid md:grid-cols-12 gap-14 md:gap-10 items-center">
-            <div className="md:col-span-7 order-2 md:order-1 animate-fade-up">
-                <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-6">{data.title} · {data.contact.location.split(', ').slice(-2).join(', ')}</p>
-                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl text-cream leading-[0.95] mb-8">{data.name}</h1>
-                <p className="text-lg md:text-xl text-cream/70 font-light leading-relaxed max-w-xl mb-12">
+            <div className="md:col-span-7 order-2 md:order-1">
+                <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-6 animate-fade-up">{data.title} · {data.contact.location.split(', ').slice(-2).join(', ')}</p>
+                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl text-cream leading-[1.05] mb-8" aria-label={data.name}>
+                    <SplitText text={data.name} />
+                </h1>
+                <p className="text-lg md:text-xl text-cream/70 font-light leading-relaxed max-w-xl mb-12 animate-fade-up [animation-delay:700ms]">
                     {data.tagline}
                 </p>
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-8 animate-fade-up [animation-delay:850ms]">
                     <div className="flex items-center gap-4">
                         <RoundArrow href="#projects" label="View projects" />
                         <span className="text-sm text-cream/80">View my work</span>
@@ -238,10 +350,10 @@ const Hero = ({ data }) => (
                     </a>
                 </div>
             </div>
-            <div className="md:col-span-5 order-1 md:order-2 animate-fade-up [animation-delay:150ms]">
-                <div className="mx-auto max-w-[15rem] md:max-w-[19rem] rounded-[2rem] bg-panel p-3 shadow-2xl shadow-black/40">
-                    <div className="rounded-[1.5rem] bg-cream overflow-hidden aspect-[4/5] flex items-end justify-center">
-                        <img src={headshot} alt={data.name} className="w-full h-full object-cover object-top mix-blend-multiply grayscale-[35%]" />
+            <div className="md:col-span-5 order-1 md:order-2 animate-fade-up [animation-delay:200ms]">
+                <div className="group mx-auto max-w-[15rem] md:max-w-[19rem] rounded-[2rem] bg-panel p-3 shadow-2xl shadow-black/40">
+                    <div className="rounded-[1.5rem] bg-ink overflow-hidden aspect-[4/5] animate-photo-reveal [animation-delay:300ms]">
+                        <img src={profilePhoto} alt={data.name} className="w-full h-full object-cover object-top grayscale scale-105 group-hover:scale-100 transition-transform duration-[1200ms] ease-out" />
                     </div>
                     <div className="px-3 pt-5 pb-3 flex items-center justify-between gap-4">
                         <div>
@@ -276,8 +388,8 @@ const About = ({ data }) => (
 const Skills = ({ data }) => (
     <Section id="skills" eyebrow="What I work with" title="Skills">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {data.skills.map((skill) => (
-                <div key={skill.category} data-reveal className="bg-panel rounded-2xl p-6 hover:bg-panel-hover transition-colors duration-300">
+            {data.skills.map((skill, i) => (
+                <div key={skill.category} data-reveal style={{ '--reveal-delay': `${(i % 4) * 90}ms` }} className="bg-panel rounded-2xl p-6 hover:bg-panel-hover transition-colors duration-300">
                     <skill.icon size={20} strokeWidth={1.25} className="text-cream/60 mb-6" />
                     <h3 className="font-serif text-xl text-cream mb-4">{skill.category}</h3>
                     <ul className="space-y-2">
@@ -319,8 +431,8 @@ const Experience = ({ data }) => (
 const Projects = ({ data }) => (
     <Section id="projects" eyebrow="Selected work" title="Projects">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.projects.map((project) => (
-                <article key={project.name} data-reveal className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
+            {data.projects.map((project, i) => (
+                <article key={project.name} data-reveal data-cursor={project.link !== '#' ? 'Visit' : undefined} style={{ '--reveal-delay': `${(i % 2) * 120}ms` }} className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
                     <h3 className="font-serif text-2xl text-cream mb-4">{project.name}</h3>
                     <p className="text-cream/65 font-light leading-relaxed mb-8 grow">{project.description}</p>
                     <div className="flex items-end justify-between gap-6">
@@ -410,9 +522,11 @@ const App = () => {
     }, [toggleTop]);
 
     useReveal();
+    useMagnetic();
 
     return (
         <div className="min-h-screen bg-ink text-cream font-sans antialiased">
+            <Cursor />
             <Header name={WAI_OO_AUNG_DATA.name} links={navLinks} />
 
             <main>

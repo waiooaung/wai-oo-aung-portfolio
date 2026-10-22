@@ -9,10 +9,20 @@
   --font-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
   --font-sans: "Jost", "Segoe UI", system-ui, sans-serif;
   --animate-fade-up: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-letter-rise: letter-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-photo-reveal: photo-reveal 1.4s cubic-bezier(0.7, 0, 0.2, 1) both;
 
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: none; }
+  }
+  @keyframes letter-rise {
+    from { transform: translateY(105%); }
+    to { transform: none; }
+  }
+  @keyframes photo-reveal {
+    from { clip-path: inset(100% 0 0 0); }
+    to { clip-path: inset(0 0 0 0); }
   }
 }
 
@@ -22,8 +32,11 @@ h1, h2, h3 { font-weight: 400; letter-spacing: 0.005em; }
 ::selection { background: var(--color-cream); color: var(--color-ink); }
 a:focus-visible, button:focus-visible { outline: 1px solid var(--color-cream); outline-offset: 4px; border-radius: 999px; }
 
-.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), background-color 0.3s ease; transition-delay: var(--reveal-delay, 0ms); }
 .reveal.is-visible { opacity: 1; transform: none; }
+
+/* Hide the system cursor only when the custom one is running (mouse users, motion allowed). */
+.has-custom-cursor, .has-custom-cursor * { cursor: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
