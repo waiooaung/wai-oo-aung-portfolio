@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Briefcase, Code, Cloud, Server, Database, Menu, X, Mail, Phone, MapPin, Linkedin, Github, Zap, TrendingUp, Brain, Sparkles, Layers, Plug, GraduationCap } from 'lucide-react';
+import { Code, Cloud, Server, Database, Menu, X, Mail, Phone, MapPin, Linkedin, Github, Brain, Sparkles, Layers, Plug, ArrowRight, ArrowUp } from 'lucide-react';
 import headshot from './assets/headshot.jpg';
 
 // -- DATA CONSTANTS --
 const WAI_OO_AUNG_DATA = {
     name: "Wai Oo Aung",
     title: "Senior Backend Developer",
+    tagline: "I design and build APIs, SaaS platforms and AI-powered systems that scale. Backend first, comfortable across the full stack.",
     summary: "Senior Backend Developer with 6+ years of experience designing, building and scaling web platforms, APIs and cloud-hosted business systems. Expert in Node.js (NestJS, Express) and PHP (Laravel) with strong PostgreSQL, MySQL, MongoDB and Redis design. I've built multi-tenant SaaS products, POS and inventory engines, an AI-powered CRM and a currency exchange platform, and I'm comfortable shipping across the full stack.",
     contact: {
         phone: "(+971) 55 241 7780",
@@ -128,138 +129,160 @@ const WAI_OO_AUNG_DATA = {
     ],
 };
 
+
 // -- COMPONENTS --
+
+// Fades an element up when it scrolls into view. Content stays visible if JS
+// or IntersectionObserver is unavailable, and motion is skipped for reduced-motion users.
+const useReveal = () => {
+    useEffect(() => {
+        const els = document.querySelectorAll('[data-reveal]');
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce || !('IntersectionObserver' in window)) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+        els.forEach((el) => {
+            // Only hide what is still below the fold, so the first screen never flashes.
+            if (el.getBoundingClientRect().top > window.innerHeight) {
+                el.classList.add('reveal');
+                observer.observe(el);
+            }
+        });
+        return () => observer.disconnect();
+    }, []);
+};
 
 const Header = ({ name, links }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
 
-    const accentColorClass = `text-teal-500 hover:text-teal-600`;
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 24);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     return (
-        <header className={`fixed top-0 left-0 right-0 bg-zinc-950/90 backdrop-blur-md shadow-2xl shadow-black/50 z-50 transition duration-300`}>
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                <a href="#hero" className={`text-2xl font-extrabold ${accentColorClass} transition duration-300 tracking-wider`}>
-                    {name.split(' ')[0]} <span className="text-white">DEV</span>
-                </a>
-                <nav className="hidden md:flex space-x-8">
+        <header className={`fixed top-0 inset-x-0 z-50 transition-colors duration-500 ${scrolled ? 'bg-ink/90 backdrop-blur-md border-b border-line' : 'bg-transparent border-b border-transparent'}`}>
+            <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+                <a href="#hero" className="font-serif text-2xl text-cream tracking-wide">{name}</a>
+                <nav className="hidden md:flex gap-10">
                     {links.map(({ id, label }) => (
-                        <a key={id} href={`#${id}`} className={`text-zinc-300 hover:text-white font-medium transition duration-300 relative group`}>
+                        <a key={id} href={`#${id}`} className="text-xs uppercase tracking-[0.2em] text-cream/60 hover:text-cream transition-colors duration-300">
                             {label}
-                            <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-teal-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300`}></span>
                         </a>
                     ))}
                 </nav>
-                <div className="md:hidden">
-                    <button onClick={() => setIsOpen(!isOpen)} className={`text-zinc-300 hover:text-white focus:outline-none p-2 rounded-md transition duration-300`}>
-                        {isOpen ? <X size={28} /> : <Menu size={28} />}
-                    </button>
-                </div>
+                <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-cream/80 hover:text-cream p-2" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen}>
+                    {isOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
+                </button>
             </div>
-            {/* Mobile Menu */}
             {isOpen && (
-                <div className="md:hidden bg-zinc-900 shadow-lg border-t border-zinc-700">
-                    <nav className="px-4 pt-2 pb-4 space-y-2">
-                        {links.map(({ id, label }) => (
-                            <a key={id} href={`#${id}`} onClick={() => setIsOpen(false)} className={`block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800 hover:text-teal-500 transition duration-150`}>
-                                {label}
-                            </a>
-                        ))}
-                    </nav>
-                </div>
+                <nav className="md:hidden bg-ink border-t border-line px-6 py-4 flex flex-col">
+                    {links.map(({ id, label }) => (
+                        <a key={id} href={`#${id}`} onClick={() => setIsOpen(false)} className="py-3 text-sm uppercase tracking-[0.2em] text-cream/70 hover:text-cream">
+                            {label}
+                        </a>
+                    ))}
+                </nav>
             )}
         </header>
     );
 };
 
-const Section = ({ id, title, children, className = '' }) => (
-    <section id={id} className={`py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto ${className}`}>
-        <h2 className="text-4xl font-extrabold text-white mb-10 text-center relative pb-3">
-            {title}
-            <span className={`block w-24 h-1 bg-teal-500 mx-auto mt-2 rounded-full shadow-lg shadow-teal-500/50`}></span>
-        </h2>
+const Section = ({ id, eyebrow, title, children }) => (
+    <section id={id} className="max-w-6xl mx-auto px-6 py-24 md:py-32">
+        <div data-reveal className="mb-14 md:mb-20">
+            <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-4">{eyebrow}</p>
+            <h2 className="font-serif text-4xl md:text-5xl text-cream">{title}</h2>
+        </div>
         {children}
     </section>
 );
 
-const Hero = ({ data }) => {
-    return (
-        <div id="hero" className={`pt-40 pb-24 md:pt-48 md:pb-32 bg-linear-to-br from-zinc-950 to-zinc-900 min-h-screen flex items-center relative overflow-hidden`}>
-             {/* Background Grid and Blur */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 120 120\'%3E%3Cpath fill=\'%23a1a1aa\' fill-opacity=\'0.1\' d=\'M120 0H0V120h120V0zM60 0v120M0 60h120\'/%3E%3C/svg%3E")',
-                backgroundSize: '30px 30px'
-            }}></div>
+const RoundArrow = ({ href, label, external = false }) => (
+    <a
+        href={href}
+        aria-label={label}
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        className="inline-flex items-center justify-center w-12 h-12 shrink-0 rounded-full bg-cream text-ink hover:bg-white transition-all duration-300 hover:translate-x-1"
+    >
+        <ArrowRight size={18} strokeWidth={1.5} />
+    </a>
+);
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
-                <div className="grid md:grid-cols-12 gap-12 items-center">
-                    {/* Text Content */}
-                    <div className="md:col-span-8 text-white">
-                        <p className={`text-xl text-teal-500 font-semibold mb-3 flex items-center tracking-wider`}>
-                            <Zap className="w-5 h-5 mr-2" /> Welcome to my Portfolio
-                        </p>
-                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight mb-4">
-                            Hi, I'm <span className={`text-teal-500 block mt-1`}>{data.name}</span>
-                        </h1>
-                        <h2 className="text-3xl sm:text-4xl font-light text-zinc-300 mb-6 border-s-4 border-zinc-700 pl-4">
-                            {data.title}
-                        </h2>
-                        <p className="text-lg text-zinc-400 max-w-2xl mb-10 leading-relaxed">
-                            {data.summary}
-                        </p>
-                        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                            <a href="#projects" className={`inline-flex items-center justify-center px-10 py-4 text-lg font-bold rounded-xl shadow-2xl text-zinc-900 bg-teal-500 hover:bg-teal-600 transition duration-300 transform hover:scale-[1.05] focus:outline-none focus:ring-4 ring-teal-500/50 animate-pulse`}>
-                                View Solutions <TrendingUp className="w-5 h-5 ml-2" />
-                            </a>
-                            <a href="#contact" className={`inline-flex items-center justify-center px-10 py-4 text-lg font-medium rounded-xl border-2 border-teal-500 text-teal-500 bg-zinc-900 hover:bg-zinc-800 transition duration-300 transform hover:scale-[1.05] focus:outline-none focus:ring-4 ring-teal-500/50`}>
-                                Get In Touch
-                            </a>
-                        </div>
+const Hero = ({ data }) => (
+    <section id="hero" className="max-w-6xl mx-auto px-6 pt-36 pb-24 md:pt-44 md:pb-32">
+        <div className="grid md:grid-cols-12 gap-14 md:gap-10 items-center">
+            <div className="md:col-span-7 order-2 md:order-1 animate-fade-up">
+                <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-6">{data.title} · {data.contact.location.split(', ').slice(-2).join(', ')}</p>
+                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl text-cream leading-[0.95] mb-8">{data.name}</h1>
+                <p className="text-lg md:text-xl text-cream/70 font-light leading-relaxed max-w-xl mb-12">
+                    {data.tagline}
+                </p>
+                <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-4">
+                        <RoundArrow href="#projects" label="View projects" />
+                        <span className="text-sm text-cream/80">View my work</span>
                     </div>
-
-                    {/* Profile Links & Placeholder */}
-                    <div className="md:col-span-4 flex flex-col items-center">
-                        <div className={`w-64 h-64 bg-zinc-800/50 backdrop-blur-sm rounded-full shadow-2xl shadow-black/70 mb-8 border-4 border-teal-500/50 overflow-hidden`}>
-                            <img
-                                src={headshot}
-                                alt="Wai Oo Aung"
-                                className="w-full h-full object-cover"
-                            />
+                    <a href="#contact" className="text-sm text-cream/60 hover:text-cream border-b border-cream/30 hover:border-cream pb-1 transition-colors duration-300">
+                        Get in touch
+                    </a>
+                </div>
+            </div>
+            <div className="md:col-span-5 order-1 md:order-2 animate-fade-up [animation-delay:150ms]">
+                <div className="mx-auto max-w-[15rem] md:max-w-[19rem] rounded-[2rem] bg-panel p-3 shadow-2xl shadow-black/40">
+                    <div className="rounded-[1.5rem] bg-cream overflow-hidden aspect-[4/5] flex items-end justify-center">
+                        <img src={headshot} alt={data.name} className="w-full h-full object-cover object-top mix-blend-multiply grayscale-[35%]" />
+                    </div>
+                    <div className="px-3 pt-5 pb-3 flex items-center justify-between gap-4">
+                        <div>
+                            <p className="font-serif text-xl text-cream">6+ years</p>
+                            <p className="text-xs text-cream/50 mt-1">Node.js · NestJS · Laravel</p>
                         </div>
-                        <div className="flex space-x-6">
-                            <SocialLink Icon={Linkedin} href={data.contact.linkedin} color="text-blue-500" />
-                            <SocialLink Icon={Github} href={data.contact.github} color="text-zinc-300" />
-                            <SocialLink Icon={Mail} href={`mailto:${data.contact.email}`} color="text-red-500" />
+                        <div className="flex gap-2">
+                            <IconLink Icon={Linkedin} href={data.contact.linkedin} label="LinkedIn" />
+                            <IconLink Icon={Github} href={data.contact.github} label="GitHub" />
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    );
-};
+    </section>
+);
 
-const SocialLink = ({ Icon, href, color }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={`p-3 rounded-full bg-zinc-800 shadow-lg shadow-black/50 hover:shadow-xl ${color} hover:text-white transition duration-300 transform hover:scale-110 border border-zinc-700`}>
-        <Icon size={24} />
+const IconLink = ({ Icon, href, label }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="w-10 h-10 rounded-full border border-line text-cream/70 hover:text-cream hover:border-cream/60 flex items-center justify-center transition-colors duration-300">
+        <Icon size={16} strokeWidth={1.5} />
     </a>
 );
 
-const Skills = ({ data }) => (
-    <Section id="skills" title="Technical Expertise" className={`bg-zinc-800`}>
-        <p className="text-center text-zinc-400 mb-12 max-w-3xl mx-auto text-lg">
-            Backend-first engineering across APIs, databases and cloud infrastructure, with growing depth in AI/LLM integration and the frontend skills to deliver end to end.
+const About = ({ data }) => (
+    <section id="about" className="max-w-6xl mx-auto px-6 py-16 md:py-24 border-t border-line">
+        <p data-reveal className="font-serif text-2xl md:text-4xl text-cream/90 leading-snug max-w-4xl">
+            {data.summary}
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {data.skills.map((skill, index) => (
-                <div key={index} className={`bg-zinc-800 p-6 rounded-2xl shadow-2xl shadow-black/50 hover:shadow-teal-500/10 transition duration-500 border border-zinc-700/50 hover:border-teal-500 transform hover:-translate-y-2`}>
-                    <div className="flex items-center mb-4 border-b border-zinc-700 pb-3">
-                        <skill.icon className={`w-8 h-8 text-teal-500 mr-3`} />
-                        <h3 className="text-xl font-bold text-white">{skill.category}</h3>
-                    </div>
+    </section>
+);
+
+const Skills = ({ data }) => (
+    <Section id="skills" eyebrow="What I work with" title="Skills">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {data.skills.map((skill) => (
+                <div key={skill.category} data-reveal className="bg-panel rounded-2xl p-6 hover:bg-panel-hover transition-colors duration-300">
+                    <skill.icon size={20} strokeWidth={1.25} className="text-cream/60 mb-6" />
+                    <h3 className="font-serif text-xl text-cream mb-4">{skill.category}</h3>
                     <ul className="space-y-2">
-                        {skill.items.map((item, i) => (
-                            <li key={i} className={`text-zinc-300 bg-zinc-700/50 px-3 py-1 rounded-lg text-sm font-medium transition duration-200 border border-zinc-700 hover:bg-teal-500/20 hover:text-teal-500`}>
-                                {item}
-                            </li>
+                        {skill.items.map((item) => (
+                            <li key={item} className="text-sm text-cream/60 font-light leading-snug">{item}</li>
                         ))}
                     </ul>
                 </div>
@@ -269,81 +292,57 @@ const Skills = ({ data }) => (
 );
 
 const Experience = ({ data }) => (
-    <Section id="experience" title="Professional Journey" className={`bg-zinc-900`}>
-        <ol className="relative border-s border-teal-500/50 ml-4 md:ml-0 max-w-4xl mx-auto">
-            {data.experience.map((job, index) => (
-                <li key={index} className="mb-12 ms-6">
-                    <span className={`absolute flex items-center justify-center w-6 h-6 bg-teal-500/20 rounded-full -start-3 ring-8 ring-zinc-900 shadow-lg shadow-black/50`}>
-                        <Briefcase className={`w-3 h-3 text-teal-500`} />
-                    </span>
-                    <div className="p-6 bg-zinc-800 rounded-xl shadow-2xl shadow-black/70 hover:shadow-teal-500/20 transition duration-500 border border-zinc-700 transform hover:scale-[1.01] hover:translate-x-1">
-                        <div className="flex justify-between items-start flex-wrap mb-2">
-                            <h3 className="text-2xl font-bold text-white">{job.title}</h3>
-                            <time className={`text-sm font-semibold text-teal-500`}>{job.period}</time>
-                        </div>
-                        <div className="text-lg font-medium text-zinc-300 mb-3">{job.company} | <span className="text-zinc-400">{job.location}</span></div>
-                        <ul className="list-disc space-y-2 pl-5 text-zinc-400">
-                            {job.description.map((desc, i) => (
-                                <li key={i} className="text-sm">{desc}</li>
+    <Section id="experience" eyebrow="Where I've worked" title="Experience">
+        <ol className="border-t border-line">
+            {data.experience.map((job) => (
+                <li key={`${job.company}-${job.period}`} data-reveal className="grid md:grid-cols-12 gap-4 md:gap-10 py-10 border-b border-line">
+                    <div className="md:col-span-3">
+                        <time className="text-xs uppercase tracking-[0.2em] text-cream/50">{job.period}</time>
+                    </div>
+                    <div className="md:col-span-9">
+                        <h3 className="font-serif text-2xl md:text-3xl text-cream">{job.title}</h3>
+                        <p className="text-sm text-cream/60 mt-2 mb-5">{job.company} · {job.location}</p>
+                        <ul className="space-y-3">
+                            {job.description.map((desc) => (
+                                <li key={desc} className="text-cream/70 font-light leading-relaxed pl-5 relative before:content-[''] before:absolute before:left-0 before:top-[0.7em] before:w-2 before:h-px before:bg-cream/40">
+                                    {desc}
+                                </li>
                             ))}
                         </ul>
                     </div>
                 </li>
             ))}
         </ol>
-        <div className="mt-12 text-center">
-            <p className="text-zinc-500 italic">6+ years of professional experience driving digital solutions.</p>
-        </div>
     </Section>
 );
 
 const Projects = ({ data }) => (
-    <Section id="projects" title="Featured Projects" className={`bg-zinc-800`}>
-        <p className="text-center text-zinc-400 mb-12 max-w-3xl mx-auto text-lg">
-            Showcasing work across fintech and currency exchange, AI-powered CRM, POS and e-commerce systems.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {data.projects.map((project, index) => (
-                <ProjectCard key={index} project={project} />
+    <Section id="projects" eyebrow="Selected work" title="Projects">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.projects.map((project) => (
+                <article key={project.name} data-reveal className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
+                    <h3 className="font-serif text-2xl text-cream mb-4">{project.name}</h3>
+                    <p className="text-cream/65 font-light leading-relaxed mb-8 grow">{project.description}</p>
+                    <div className="flex items-end justify-between gap-6">
+                        <p className="text-xs uppercase tracking-[0.15em] text-cream/45 leading-loose">
+                            {project.technologies.split(',').map((t) => t.trim()).join(' · ')}
+                        </p>
+                        {project.link !== '#' && <RoundArrow href={project.link} label={`Open ${project.name}`} external />}
+                    </div>
+                </article>
             ))}
         </div>
     </Section>
 );
 
-const ProjectCard = ({ project }) => (
-    <div className={`bg-zinc-800 rounded-2xl shadow-2xl shadow-black/70 overflow-hidden transition duration-500 border border-zinc-700/50 flex flex-col hover:border-teal-500 transform hover:scale-[1.02]`}>
-        <div className="p-6 grow">
-            <h3 className={`text-xl font-bold text-teal-500 mb-3`}>{project.name}</h3>
-            <p className="text-zinc-400 mb-4 grow text-sm">{project.description}</p>
-        </div>
-        <div className="p-6 pt-0 border-t border-zinc-700">
-            <p className="text-sm font-medium text-zinc-500 mb-3">Tech Stack:</p>
-            <div className="flex flex-wrap gap-2 mb-4">
-                {project.technologies.split(',').map((tech, i) => (
-                    <span key={i} className={`bg-zinc-700 text-zinc-200 text-xs font-semibold px-3 py-1 rounded-full border border-zinc-600`}>{tech.trim()}</span>
-                ))}
-            </div>
-            {project.link !== '#' && (
-                <a href={project.link} target="_blank" rel="noopener noreferrer" className={`text-teal-500 hover:text-white font-semibold flex items-center transition duration-300 group`}>
-                    View Live Project
-                    <svg className={`w-4 h-4 ml-2 group-hover:translate-x-1 transition duration-300`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                </a>
-            )}
-        </div>
-    </div>
-);
-
 const Education = ({ data }) => (
-    <Section id="education" title="Education & Certifications" className={`bg-zinc-900`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {data.education.map((item, index) => (
-                <div key={index} className="flex items-start p-6 bg-zinc-800 rounded-xl shadow-2xl shadow-black/70 border border-zinc-700 hover:border-teal-500 transition duration-300">
-                    <GraduationCap className="w-8 h-8 text-teal-500 mr-4 shrink-0" />
-                    <div>
-                        <h3 className="text-lg font-bold text-white">{item.degree}</h3>
-                        <p className="text-zinc-400 text-sm">{item.school}</p>
-                        {item.period && <p className="text-teal-500 text-xs font-semibold mt-1">{item.period}</p>}
-                    </div>
+    <Section id="education" eyebrow="Learning" title="Education">
+        <div className="grid md:grid-cols-2 gap-x-10 border-t border-line">
+            {data.education.map((item) => (
+                <div key={item.degree} data-reveal className="py-8 border-b border-line">
+                    <h3 className="font-serif text-xl text-cream">{item.degree}</h3>
+                    <p className="text-sm text-cream/60 mt-2">{item.school}</p>
+                    {item.period && <p className="text-xs uppercase tracking-[0.2em] text-cream/40 mt-3">{item.period}</p>}
                 </div>
             ))}
         </div>
@@ -351,44 +350,42 @@ const Education = ({ data }) => (
 );
 
 const Contact = ({ data }) => (
-    <Section id="contact" title="Let's Connect" className={`bg-zinc-800`}>
-        <div className={`bg-zinc-800 p-8 rounded-2xl shadow-2xl shadow-black/70 max-w-4xl mx-auto border border-zinc-700`}>
-            <p className="text-center text-xl text-zinc-300 mb-10">
-                I am actively seeking backend and full stack roles. Feel free to reach out to discuss potential projects or opportunities.
+    <section id="contact" className="max-w-6xl mx-auto px-6 py-24 md:py-32">
+        <div data-reveal className="bg-panel rounded-[2rem] p-8 md:p-16">
+            <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-6">Contact</p>
+            <h2 className="font-serif text-4xl md:text-6xl text-cream mb-6 max-w-3xl">Let's build something together.</h2>
+            <p className="text-cream/65 font-light text-lg max-w-2xl mb-12">
+                I'm looking for backend and full stack roles in Dubai and the UAE. Feel free to reach out about a role or a project.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <ContactItem Icon={Mail} text={data.contact.email} href={`mailto:${data.contact.email}`} />
-                <ContactItem Icon={Phone} text={data.contact.phone} href={`tel:${data.contact.phone.replace(/[\s\(\)]/g, '')}`} />
-                <ContactItem Icon={MapPin} text={data.contact.location} />
-            </div>
-            <div className="mt-10 flex justify-center space-x-6">
-                <SocialLink Icon={Linkedin} href={data.contact.linkedin} color="text-blue-500" />
-                <SocialLink Icon={Github} href={data.contact.github} color="text-zinc-300" />
+            <div className="grid sm:grid-cols-3 gap-8 border-t border-line pt-10">
+                <ContactItem Icon={Mail} label="Email" text={data.contact.email} href={`mailto:${data.contact.email}`} />
+                <ContactItem Icon={Phone} label="Phone" text={data.contact.phone} href={`tel:${data.contact.phone.replace(/[\s()]/g, '')}`} />
+                <ContactItem Icon={MapPin} label="Location" text={data.contact.location} />
             </div>
         </div>
-    </Section>
+    </section>
 );
 
-const ContactItem = ({ Icon, text, href }) => (
-    <div className={`flex flex-col items-center p-4 bg-zinc-900 rounded-xl shadow-lg shadow-black/50 hover:shadow-teal-500/10 transition duration-300 border border-zinc-700`}>
-        <Icon className={`w-8 h-8 text-teal-500 mb-3`} />
+const ContactItem = ({ Icon, label, text, href }) => (
+    <div className="min-w-0">
+        <p className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-cream/45 mb-3">
+            <Icon size={14} strokeWidth={1.5} /> {label}
+        </p>
         {href ? (
-            <a href={href} className={`text-lg font-medium text-white hover:text-teal-500 transition duration-300`}>{text}</a>
+            <a href={href} className="text-cream hover:text-white break-words border-b border-transparent hover:border-cream/50 transition-colors duration-300">{text}</a>
         ) : (
-            <p className="text-lg font-medium text-white">{text}</p>
+            <p className="text-cream break-words">{text}</p>
         )}
     </div>
 );
 
-const Footer = ({ name }) => (
-    <footer className="bg-zinc-950 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-zinc-500 text-sm">
-                &copy; {new Date().getFullYear()} {name}. All rights reserved.
-            </p>
-            <p className="text-zinc-600 text-xs mt-2">
-                Designed & Developed with React and Tailwind CSS.
-            </p>
+const Footer = ({ data }) => (
+    <footer className="max-w-6xl mx-auto px-6 py-10 border-t border-line flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <p className="text-xs text-cream/40">&copy; {new Date().getFullYear()} {data.name}</p>
+        <div className="flex gap-2">
+            <IconLink Icon={Linkedin} href={data.contact.linkedin} label="LinkedIn" />
+            <IconLink Icon={Github} href={data.contact.github} label="GitHub" />
+            <IconLink Icon={Mail} href={`mailto:${data.contact.email}`} label="Email" />
         </div>
     </footer>
 );
@@ -397,7 +394,6 @@ const Footer = ({ name }) => (
 // -- MAIN APP COMPONENT --
 const App = () => {
     const navLinks = useMemo(() => [
-        { id: 'hero', label: 'Home' },
         { id: 'skills', label: 'Skills' },
         { id: 'experience', label: 'Experience' },
         { id: 'projects', label: 'Projects' },
@@ -405,63 +401,23 @@ const App = () => {
         { id: 'contact', label: 'Contact' },
     ], []);
 
-    const [isVisible, setIsVisible] = useState(false);
-
-    // Show or hide the scroll-to-top button
-    const toggleVisibility = useCallback(() => {
-        if (window.scrollY > 300) {
-            setIsVisible(true);
-        } else {
-            setIsVisible(false);
-        }
-    }, []);
-
-    // Scroll to top
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-        });
-    };
+    const [showTop, setShowTop] = useState(false);
+    const toggleTop = useCallback(() => setShowTop(window.scrollY > 600), []);
 
     useEffect(() => {
-        window.addEventListener('scroll', toggleVisibility);
-        return () => window.removeEventListener('scroll', toggleVisibility);
-    }, [toggleVisibility]);
+        window.addEventListener('scroll', toggleTop, { passive: true });
+        return () => window.removeEventListener('scroll', toggleTop);
+    }, [toggleTop]);
 
+    useReveal();
 
     return (
-        <div className={`min-h-screen bg-zinc-900 font-sans text-white antialiased`}>
-            {/* Tailwind CSS Script for CDN */}
-            <script src="https://cdn.tailwindcss.com"></script>
-            <style>{`
-                /* Configure Tailwind to recognize custom colors (needed for dynamic classes) */
-                /* WARNING: This block is necessary for JIT-like compilation in the browser environment */
-                /* DO NOT remove these classes from the CSS properties here or the design will break */
-                
-                html { scroll-behavior: smooth; }
-                body { font-family: 'Inter', sans-serif; }
-                
-                /* Force-include dynamic classes for Tailwind JIT emulation */
-                .text-teal-500, .hover:text-teal-600, .bg-teal-500, .hover:bg-teal-600, .ring-teal-500\/50, .shadow-teal-500\/10, .shadow-teal-500\/20, .border-teal-500 {
-                    color: #14b8a6; /* teal-500 */
-                    background-color: #14b8a6; /* teal-500 */
-                }
-                .text-zinc-900 { color: #18181b; }
-                .bg-zinc-950 { background-color: #09090b; }
-                .bg-zinc-900 { background-color: #18181b; }
-                .bg-zinc-800 { background-color: #27272a; }
-                .text-zinc-300 { color: #d4d4d8; }
-                .text-zinc-400 { color: #a1a1aa; }
-                .bg-zinc-700\/50:hover { background-color: rgba(20, 184, 166, 0.2); }
-                .text-teal-500:hover { color: #0d9488; } /* teal-600 */
-
-            `}</style>
-
+        <div className="min-h-screen bg-ink text-cream font-sans antialiased">
             <Header name={WAI_OO_AUNG_DATA.name} links={navLinks} />
 
             <main>
                 <Hero data={WAI_OO_AUNG_DATA} />
+                <About data={WAI_OO_AUNG_DATA} />
                 <Skills data={WAI_OO_AUNG_DATA} />
                 <Experience data={WAI_OO_AUNG_DATA} />
                 <Projects data={WAI_OO_AUNG_DATA} />
@@ -469,18 +425,15 @@ const App = () => {
                 <Contact data={WAI_OO_AUNG_DATA} />
             </main>
 
-            <Footer name={WAI_OO_AUNG_DATA.name} />
+            <Footer data={WAI_OO_AUNG_DATA} />
 
-            {/* Scroll-to-Top Button */}
-            {isVisible && (
-                <button
-                    onClick={scrollToTop}
-                    className={`fixed bottom-6 right-6 p-3 bg-teal-500 text-white rounded-full shadow-lg shadow-black/50 hover:bg-teal-600 transition duration-300 focus:outline-none z-50 transform hover:scale-110`}
-                    aria-label="Scroll to top"
-                >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-                </button>
-            )}
+            <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                aria-label="Scroll to top"
+                className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-cream text-ink flex items-center justify-center shadow-lg shadow-black/40 hover:bg-white transition-all duration-500 ${showTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+            >
+                <ArrowUp size={18} strokeWidth={1.5} />
+            </button>
         </div>
     );
 };
