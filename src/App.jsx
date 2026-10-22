@@ -5,9 +5,9 @@ import profilePhoto from './assets/profile-bw.jpg';
 // -- DATA CONSTANTS --
 const WAI_OO_AUNG_DATA = {
     name: "Wai Oo Aung",
-    title: "Senior Backend Developer",
-    tagline: "I design and build APIs, SaaS platforms and AI-powered systems that scale. Backend first, comfortable across the full stack.",
-    summary: "Senior Backend Developer with 6+ years of experience designing, building and scaling web platforms, APIs and cloud-hosted business systems. Expert in Node.js (NestJS, Express) and PHP (Laravel) with strong PostgreSQL, MySQL, MongoDB and Redis design. I've built multi-tenant SaaS products, POS and inventory engines, an AI-powered CRM and a currency exchange platform, and I'm comfortable shipping across the full stack.",
+    title: "Full Stack Developer",
+    tagline: "I design and build APIs, SaaS platforms and AI-powered systems that scale, from the database and APIs through to the web interface.",
+    summary: "Full Stack Developer with 6+ years of experience designing, building and scaling web platforms, APIs and cloud-hosted business systems. Expert in Node.js (NestJS, Express) and PHP (Laravel) with strong PostgreSQL, MySQL, MongoDB and Redis design. I've built multi-tenant SaaS products, POS and inventory engines, an AI-powered CRM and a currency exchange platform, delivering both backend services and Next.js / React frontends.",
     contact: {
         phone: "(+971) 55 241 7780",
         email: "waiooaung.sea@gmail.com",
@@ -490,7 +490,7 @@ const Contact = ({ data }) => (
             <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-6">Contact</p>
             <h2 className="font-serif text-4xl md:text-6xl text-cream mb-6 max-w-3xl">Let's build something together.</h2>
             <p className="text-cream/65 font-light text-lg max-w-2xl mb-12">
-                I'm looking for backend and full stack roles in Dubai and the UAE. Feel free to reach out about a role or a project.
+                I'm looking for full stack and backend roles in Dubai and the UAE. Feel free to reach out about a role or a project.
             </p>
             <div className="grid sm:grid-cols-3 gap-8 border-t border-line pt-10">
                 <ContactItem Icon={Mail} label="Email" text={data.contact.email} href={`mailto:${data.contact.email}`} />
