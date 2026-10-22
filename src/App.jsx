@@ -181,44 +181,70 @@ const prefersFinePointer = () =>
     window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// A small dot that follows the pointer exactly, with a ring that trails behind it.
-// The ring grows over links and buttons, and shows a label over elements with data-cursor.
+// A small dot that follows the pointer, drawing a thin cream line behind it
+// that fades and tapers away. The dot grows over links and buttons.
+const TRAIL_LIFETIME = 450; // ms a point stays on the trail
+
 const Cursor = () => {
+    const canvasRef = useRef(null);
     const dotRef = useRef(null);
-    const ringRef = useRef(null);
     const [enabled] = useState(prefersFinePointer);
-    const [state, setState] = useState({ hover: false, label: '', hidden: true, down: false });
+    const [state, setState] = useState({ hover: false, hidden: true, down: false });
 
     useEffect(() => {
         if (!enabled) return;
         document.documentElement.classList.add('has-custom-cursor');
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const points = [];
         const pos = { x: -100, y: -100 };
-        const ring = { x: -100, y: -100 };
         let frame;
+
+        const resize = () => {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
 
         const onMove = (e) => {
             pos.x = e.clientX;
             pos.y = e.clientY;
-            const target = e.target.closest('a, button, [data-cursor]');
-            const labelled = e.target.closest('[data-cursor]');
-            setState((prev) => {
-                const next = { ...prev, hidden: false, hover: !!target, label: labelled ? labelled.dataset.cursor : '' };
-                return next.hover === prev.hover && next.label === prev.label && !prev.hidden ? prev : next;
-            });
+            points.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+            const hover = !!e.target.closest('a, button');
+            setState((prev) => (prev.hover === hover && !prev.hidden ? prev : { ...prev, hover, hidden: false }));
         };
-        const onLeave = () => setState((prev) => ({ ...prev, hidden: true }));
+        const onLeave = () => {
+            points.length = 0;
+            setState((prev) => ({ ...prev, hidden: true }));
+        };
         const onDown = () => setState((prev) => ({ ...prev, down: true }));
         const onUp = () => setState((prev) => ({ ...prev, down: false }));
 
         const tick = () => {
-            ring.x += (pos.x - ring.x) * 0.18;
-            ring.y += (pos.y - ring.y) * 0.18;
+            const now = performance.now();
+            while (points.length && now - points[0].t > TRAIL_LIFETIME) points.shift();
+
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            for (let i = 1; i < points.length; i++) {
+                const life = 1 - (now - points[i].t) / TRAIL_LIFETIME;
+                ctx.strokeStyle = `rgba(232, 228, 220, ${life * 0.85})`;
+                ctx.lineWidth = 0.5 + life * 2;
+                ctx.beginPath();
+                ctx.moveTo(points[i - 1].x, points[i - 1].y);
+                ctx.lineTo(points[i].x, points[i].y);
+                ctx.stroke();
+            }
+
             if (dotRef.current) dotRef.current.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
-            if (ringRef.current) ringRef.current.style.transform = `translate3d(${ring.x}px, ${ring.y}px, 0)`;
             frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
 
+        window.addEventListener('resize', resize);
         window.addEventListener('mousemove', onMove, { passive: true });
         document.addEventListener('mouseleave', onLeave);
         window.addEventListener('mousedown', onDown);
@@ -226,6 +252,7 @@ const Cursor = () => {
         return () => {
             cancelAnimationFrame(frame);
             document.documentElement.classList.remove('has-custom-cursor');
+            window.removeEventListener('resize', resize);
             window.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseleave', onLeave);
             window.removeEventListener('mousedown', onDown);
@@ -235,16 +262,12 @@ const Cursor = () => {
 
     if (!enabled) return null;
 
-    const ringSize = state.label ? 'w-20 h-20 bg-cream border-cream' : state.hover ? 'w-14 h-14 bg-cream/10 border-cream/70' : 'w-9 h-9 border-cream/50';
+    const dotSize = state.hover ? 'w-4 h-4 bg-cream/90' : 'w-2 h-2 bg-cream';
     return (
         <div aria-hidden="true" className={`pointer-events-none fixed inset-0 z-[100] transition-opacity duration-300 ${state.hidden ? 'opacity-0' : 'opacity-100'}`}>
-            <div ref={ringRef} className="absolute top-0 left-0">
-                <div className={`-translate-x-1/2 -translate-y-1/2 rounded-full border flex items-center justify-center transition-all duration-300 ease-out ${ringSize} ${state.down ? 'scale-75' : 'scale-100'}`}>
-                    <span className={`text-[10px] uppercase tracking-[0.2em] text-ink transition-opacity duration-200 ${state.label ? 'opacity-100' : 'opacity-0'}`}>{state.label}</span>
-                </div>
-            </div>
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
             <div ref={dotRef} className="absolute top-0 left-0">
-                <div className={`-translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-cream transition-opacity duration-200 ${state.hover ? 'opacity-0' : 'opacity-100'}`} />
+                <div className={`-translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ease-out ${dotSize} ${state.down ? 'scale-75' : 'scale-100'}`} />
             </div>
         </div>
     );
@@ -432,7 +455,7 @@ const Projects = ({ data }) => (
     <Section id="projects" eyebrow="Selected work" title="Projects">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.projects.map((project, i) => (
-                <article key={project.name} data-reveal data-cursor={project.link !== '#' ? 'Visit' : undefined} style={{ '--reveal-delay': `${(i % 2) * 120}ms` }} className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
+                <article key={project.name} data-reveal style={{ '--reveal-delay': `${(i % 2) * 120}ms` }} className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
                     <h3 className="font-serif text-2xl text-cream mb-4">{project.name}</h3>
                     <p className="text-cream/65 font-light leading-relaxed mb-8 grow">{project.description}</p>
                     <div className="flex items-end justify-between gap-6">
