@@ -1,24 +1,28 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Briefcase, Code, Cloud, Server, Database, Menu, X, Mail, Phone, MapPin, Linkedin, Github, Zap, TrendingUp, Cpu } from 'lucide-react';
+import { Briefcase, Code, Cloud, Server, Database, Menu, X, Mail, Phone, MapPin, Linkedin, Github, Zap, TrendingUp, Brain, Sparkles, Layers, Plug, GraduationCap } from 'lucide-react';
+import headshot from './assets/headshot.jpg';
 
 // -- DATA CONSTANTS --
 const WAI_OO_AUNG_DATA = {
     name: "Wai Oo Aung",
-    title: "Senior Full Stack Developer",
-    summary: "Senior Web Developer with 6+ years of experience developing robust web applications. Adept in NodeJs, NestJS, PHP, Python, and JavaScript, I translate client requirements into technical solutions. Proven track record in database management, cloud server integration, and performance optimization.",
+    title: "Senior Backend Developer",
+    summary: "Senior Backend Developer with 6+ years of experience designing, building and scaling web platforms, APIs and cloud-hosted business systems. Expert in Node.js (NestJS, Express) and PHP (Laravel) with strong PostgreSQL, MySQL, MongoDB and Redis design. I've built multi-tenant SaaS products, POS and inventory engines, an AI-powered CRM and a currency exchange platform, and I'm comfortable shipping across the full stack.",
     contact: {
-        phone: "(+971) 528241776",
+        phone: "(+971) 55 241 7780",
         email: "waiooaung.sea@gmail.com",
         linkedin: "https://www.linkedin.com/in/wai-oo-aung-31b409185",
         github: "https://github.com/waiooaung",
-        location: "Sharjah, UAE",
+        location: "Al Nahda, Dubai, UAE",
     },
     skills: [
-        { category: "Languages", icon: Code, items: ["PHP", "JavaScript", "Python", "TypeScript"] },
-        { category: "Frameworks", icon: Cpu, items: ["Laravel", "Node.js (NestJS, Express.js)", "React.js", "Next.js", "Django"] },
-        { category: "Databases", icon: Database, items: ["MySQL", "PostgreSQL", "MongoDB", "Redis"] },
-        { category: "Cloud & DevSecOps", icon: Cloud, items: ["AWS (EC2, S3)", "Digital Ocean", "Docker", "Kubernetes", "Git/GitHub/GitLab"] },
-        { category: "APIs & Servers", icon: Server, items: ["RESTful APIs", "GraphQL", "Nginx", "Apache"] },
+        { category: "Backend", icon: Server, items: ["Node.js (NestJS, Express.js, Fastify)", "TypeScript", "PHP (Laravel, Core PHP)", "Python (Django)"] },
+        { category: "AI & LLMs", icon: Brain, items: ["OpenAI & Anthropic Claude APIs (prompt design, tool calling)", "RAG with LangChain / LlamaIndex", "Vector DBs (pgvector, Pinecone, Qdrant)", "AI Agents & MCP", "n8n"] },
+        { category: "AI Dev Tools", icon: Sparkles, items: ["GitHub Copilot", "Cursor", "Claude Code"] },
+        { category: "Architecture", icon: Layers, items: ["SaaS & Multi-Tenant Systems", "RESTful & GraphQL APIs", "Microservices", "Clean Code & MVC"] },
+        { category: "Databases & Caching", icon: Database, items: ["PostgreSQL", "MySQL", "MongoDB", "Redis", "Schema design, indexing & query tuning"] },
+        { category: "Cloud & DevOps", icon: Cloud, items: ["AWS (EC2, S3)", "DigitalOcean", "Docker", "Nginx, PM2 & Linux", "GitHub Actions CI/CD"] },
+        { category: "Integrations", icon: Plug, items: ["Payment Gateways", "POS", "RBAC / Access Control", "Push Notifications", "CRM / HR Modules", "OpenAI & Messaging APIs"] },
+        { category: "Frontend", icon: Code, items: ["Next.js", "React.js", "React Native", "Vue.js", "Tailwind CSS"] },
     ],
     experience: [
         {
@@ -27,20 +31,22 @@ const WAI_OO_AUNG_DATA = {
             location: "Dubai",
             period: "Feb 2025 - Present",
             description: [
-                "Designed and built a currency exchange platform supporting flat and crypto currency exchange.",
-                "Utilized NestJs, NextJs, and REST APIs to deliver high-quality software solutions.",
-                "Managed cloud server integration and optimized database queries for enhanced performance.",
+                "Designed and built a currency exchange platform supporting fiat and cryptocurrency exchange, covering both frontend and backend.",
+                "Developed scalable REST APIs and web applications with NestJS and Next.js, applying clean, modular architecture.",
+                "Built an AI-powered omnichannel CRM integrating WhatsApp, Messenger and Instagram with OpenAI.",
+                "Set up and maintained cloud hosting environments and optimised database queries for performance.",
             ]
         },
         {
-            title: "Team Lead",
+            title: "Team Lead (Backend)",
             company: "APP.COM.MM Company Limited",
             location: "Myanmar",
             period: "May 2023 - Jun 2024",
             description: [
-                "Led a team to deliver high-quality e-commerce and POS systems (Achievement: Promoted to Team Lead within a year).",
-                "Designed and built a robust e-commerce platform, POS system, and customized software with advanced features.",
-                "Utilized PHP (Laravel), NodeJs, JavaScript (jQuery), and REST APIs.",
+                "Led a team of developers in the planning and delivery of an e-commerce platform, POS system and custom business software (promoted to Team Lead within a year of joining).",
+                "Developed backend modules and APIs with PHP (Laravel), Node.js and REST, including reporting, filtering and third-party integrations.",
+                "Configured and maintained web servers and cloud hosting, and optimised MySQL queries for performance.",
+                "Conducted code reviews, enforced Clean Code standards and documented solutions for quality assurance.",
             ]
         },
         {
@@ -49,13 +55,52 @@ const WAI_OO_AUNG_DATA = {
             location: "Myanmar",
             period: "Sep 2022 - May 2023",
             description: [
-                "Designed and built a robust e-commerce platform with advanced features like reporting, filtering, and API integrations.",
-                "Utilized PHP (Laravel) and JavaScript (jQuery).",
-                "Managed cloud server integration and optimized database queries.",
+                "Designed and built a robust e-commerce platform in PHP (Laravel) with advanced reporting, filtering and API integrations.",
+                "Built responsive frontend interfaces with HTML5, CSS3 and JavaScript (jQuery).",
+                "Managed cloud server setup and deployments, and optimised database queries for performance.",
+            ]
+        },
+        {
+            title: "Web Developer",
+            company: "Royal Express Company Limited",
+            location: "Myanmar",
+            period: "Mar 2020 - Sep 2022",
+            description: [
+                "Developed and maintained multiple web applications using PHP (Laravel), HTML, CSS (Bootstrap) and JavaScript.",
+                "Implemented role-based access control, geolocation APIs and integrated mailing services.",
+                "Enhanced existing web projects with a focus on responsive design and performance optimisation.",
+            ]
+        },
+        {
+            title: "Freelance Web Developer",
+            company: "Self-employed",
+            location: "Myanmar",
+            period: "Jan 2019 - Mar 2020",
+            description: [
+                "Developed and maintained websites and web applications for clients using PHP (Laravel), HTML, CSS (Bootstrap) and JavaScript.",
+                "Handled hosting setup, deployment and ongoing maintenance for client projects.",
             ]
         },
     ],
     projects: [
+        {
+            name: "Stablewire: P2P Currency Exchange",
+            technologies: "NestJS, PostgreSQL, Next.js, React Native",
+            link: "#",
+            description: "Designed the full-stack architecture, database models and backend endpoints for a peer-to-peer fiat and crypto exchange, with secure authentication and real-time transaction tracking.",
+        },
+        {
+            name: "GoSmartAI: AI-Powered Omnichannel CRM",
+            technologies: "NestJS, Next.js, PostgreSQL, OpenAI",
+            link: "#",
+            description: "Integrated WhatsApp Business, Facebook Messenger and Instagram DM with LLMs for automated customer support, lead qualification, real-time message syncing, smart agent escalation and automated analytics.",
+        },
+        {
+            name: "Enterprise POS & Inventory System",
+            technologies: "PHP (Laravel), Node.js, MySQL, REST APIs",
+            link: "#",
+            description: "End-to-end POS with real-time inventory updates, automated sales summaries, multi-tier access control and cashier/terminal workflows, integrated with the company's e-commerce platform.",
+        },
         {
             name: "API for Trading Application",
             technologies: "Node.js, Express.js, MongoDB, AWS S3",
@@ -74,13 +119,13 @@ const WAI_OO_AUNG_DATA = {
             link: "https://www.royalx.net",
             description: "A fully responsive site with geolocation API integration, dynamic price calculations, and robust mailing services.",
         },
-        {
-            name: "Go-Go Travel Mobile App API",
-            technologies: "PHP (Laravel 10), REST APIs",
-            link: "#",
-            description: "Focused on advanced reporting, filtering, and a notification system for a travel mobile application backend.",
-        },
-    ]
+    ],
+    education: [
+        { degree: "B.Sc. in Computer Science (In Progress)", school: "University of the People", period: "" },
+        { degree: "B.Sc. (Hons) in Geology", school: "Dagon University, Yangon, Myanmar", period: "" },
+        { degree: "Professional Web Developer Certificate", school: "Fairway Technology, Yangon, Myanmar", period: "Oct 2019 - Dec 2019" },
+        { degree: "Programming Basic Certificate", school: "Fairway Technology, Yangon, Myanmar", period: "Jun 2019 - Aug 2019" },
+    ],
 };
 
 // -- COMPONENTS --
@@ -175,7 +220,7 @@ const Hero = ({ data }) => {
                     <div className="md:col-span-4 flex flex-col items-center">
                         <div className={`w-64 h-64 bg-zinc-800/50 backdrop-blur-sm rounded-full shadow-2xl shadow-black/70 mb-8 border-4 border-teal-500/50 overflow-hidden`}>
                             <img
-                                src="https://avatars.githubusercontent.com/u/61152025?v=4"
+                                src={headshot}
                                 alt="Wai Oo Aung"
                                 className="w-full h-full object-cover"
                             />
@@ -201,7 +246,7 @@ const SocialLink = ({ Icon, href, color }) => (
 const Skills = ({ data }) => (
     <Section id="skills" title="Technical Expertise" className={`bg-zinc-800`}>
         <p className="text-center text-zinc-400 mb-12 max-w-3xl mx-auto text-lg">
-            A versatile full stack profile spanning multiple languages, modern frameworks, and DevOps tools, enabling end-to-end development of robust applications.
+            Backend-first engineering across APIs, databases and cloud infrastructure, with growing depth in AI/LLM integration and the frontend skills to deliver end to end.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {data.skills.map((skill, index) => (
@@ -255,7 +300,7 @@ const Experience = ({ data }) => (
 const Projects = ({ data }) => (
     <Section id="projects" title="Featured Projects" className={`bg-zinc-800`}>
         <p className="text-center text-zinc-400 mb-12 max-w-3xl mx-auto text-lg">
-            Showcasing diverse expertise across trading platforms, e-commerce, and responsive web applications.
+            Showcasing work across fintech and currency exchange, AI-powered CRM, POS and e-commerce systems.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {data.projects.map((project, index) => (
@@ -288,11 +333,28 @@ const ProjectCard = ({ project }) => (
     </div>
 );
 
+const Education = ({ data }) => (
+    <Section id="education" title="Education & Certifications" className={`bg-zinc-900`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {data.education.map((item, index) => (
+                <div key={index} className="flex items-start p-6 bg-zinc-800 rounded-xl shadow-2xl shadow-black/70 border border-zinc-700 hover:border-teal-500 transition duration-300">
+                    <GraduationCap className="w-8 h-8 text-teal-500 mr-4 shrink-0" />
+                    <div>
+                        <h3 className="text-lg font-bold text-white">{item.degree}</h3>
+                        <p className="text-zinc-400 text-sm">{item.school}</p>
+                        {item.period && <p className="text-teal-500 text-xs font-semibold mt-1">{item.period}</p>}
+                    </div>
+                </div>
+            ))}
+        </div>
+    </Section>
+);
+
 const Contact = ({ data }) => (
-    <Section id="contact" title="Let's Connect" className={`bg-zinc-900`}>
+    <Section id="contact" title="Let's Connect" className={`bg-zinc-800`}>
         <div className={`bg-zinc-800 p-8 rounded-2xl shadow-2xl shadow-black/70 max-w-4xl mx-auto border border-zinc-700`}>
             <p className="text-center text-xl text-zinc-300 mb-10">
-                I am actively seeking new opportunities and challenges. Feel free to reach out to discuss potential projects or roles.
+                I am actively seeking backend and full stack roles. Feel free to reach out to discuss potential projects or opportunities.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                 <ContactItem Icon={Mail} text={data.contact.email} href={`mailto:${data.contact.email}`} />
@@ -339,6 +401,7 @@ const App = () => {
         { id: 'skills', label: 'Skills' },
         { id: 'experience', label: 'Experience' },
         { id: 'projects', label: 'Projects' },
+        { id: 'education', label: 'Education' },
         { id: 'contact', label: 'Contact' },
     ], []);
 
@@ -402,6 +465,7 @@ const App = () => {
                 <Skills data={WAI_OO_AUNG_DATA} />
                 <Experience data={WAI_OO_AUNG_DATA} />
                 <Projects data={WAI_OO_AUNG_DATA} />
+                <Education data={WAI_OO_AUNG_DATA} />
                 <Contact data={WAI_OO_AUNG_DATA} />
             </main>
 
