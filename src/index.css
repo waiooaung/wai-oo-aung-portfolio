@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #202326;
-  --color-panel: #2a2d31;
-  --color-panel-hover: #303338;
-  --color-line: #34383d;
-  --color-cream: #e8e4dc;
-  --font-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
-  --font-sans: "Jost", "Segoe UI", system-ui, sans-serif;
+  --color-ink: #2a2e33;
+  --color-panel: #353a40;
+  --color-panel-hover: #3d4249;
+  --color-line: #474c53;
+  --color-cream: #f4f0e8;
+  --color-sand: #d9bf94;
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-sans: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --animate-fade-up: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-letter-rise: letter-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-photo-reveal: photo-reveal 1.4s cubic-bezier(0.7, 0, 0.2, 1) both;
@@ -28,7 +29,7 @@
 
 html { scroll-behavior: smooth; background: var(--color-ink); }
 body { font-family: var(--font-sans); }
-h1, h2, h3 { font-weight: 400; letter-spacing: 0.005em; }
+h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; }
 ::selection { background: var(--color-cream); color: var(--color-ink); }
 a:focus-visible, button:focus-visible { outline: 1px solid var(--color-cream); outline-offset: 4px; border-radius: 999px; }
 
