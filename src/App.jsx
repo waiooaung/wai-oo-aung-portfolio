@@ -231,7 +231,7 @@ const Cursor = () => {
             ctx.lineJoin = 'round';
             for (let i = 1; i < points.length; i++) {
                 const life = 1 - (now - points[i].t) / TRAIL_LIFETIME;
-                ctx.strokeStyle = `rgba(232, 228, 220, ${life * 0.85})`;
+                ctx.strokeStyle = `rgba(244, 240, 232, ${life * 0.85})`;
                 ctx.lineWidth = 0.5 + life * 2;
                 ctx.beginPath();
                 ctx.moveTo(points[i - 1].x, points[i - 1].y);
@@ -308,19 +308,19 @@ const Header = ({ name, links }) => {
                 <a href="#hero" className="font-serif text-2xl text-cream tracking-wide">{name}</a>
                 <nav className="hidden md:flex gap-10">
                     {links.map(({ id, label }) => (
-                        <a key={id} href={`#${id}`} className="text-xs uppercase tracking-[0.2em] text-cream/60 hover:text-cream transition-colors duration-300">
+                        <a key={id} href={`#${id}`} className="text-xs uppercase tracking-[0.2em] text-cream/75 hover:text-cream transition-colors duration-300">
                             {label}
                         </a>
                     ))}
                 </nav>
-                <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-cream/80 hover:text-cream p-2" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen}>
+                <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-cream/90 hover:text-cream p-2" aria-label={isOpen ? 'Close menu' : 'Open menu'} aria-expanded={isOpen}>
                     {isOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
                 </button>
             </div>
             {isOpen && (
                 <nav className="md:hidden bg-ink border-t border-line px-6 py-4 flex flex-col">
                     {links.map(({ id, label }) => (
-                        <a key={id} href={`#${id}`} onClick={() => setIsOpen(false)} className="py-3 text-sm uppercase tracking-[0.2em] text-cream/70 hover:text-cream">
+                        <a key={id} href={`#${id}`} onClick={() => setIsOpen(false)} className="py-3 text-sm uppercase tracking-[0.2em] text-cream/85 hover:text-cream">
                             {label}
                         </a>
                     ))}
@@ -333,7 +333,7 @@ const Header = ({ name, links }) => {
 const Section = ({ id, eyebrow, title, children }) => (
     <section id={id} className="max-w-6xl mx-auto px-6 py-24 md:py-32">
         <div data-reveal className="mb-14 md:mb-20">
-            <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-4">{eyebrow}</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-sand mb-4">{eyebrow}</p>
             <h2 className="font-serif text-4xl md:text-5xl text-cream">{title}</h2>
         </div>
         {children}
@@ -356,19 +356,19 @@ const Hero = ({ data }) => (
     <section id="hero" className="max-w-6xl mx-auto px-6 pt-36 pb-24 md:pt-44 md:pb-32">
         <div className="grid md:grid-cols-12 gap-14 md:gap-10 items-center">
             <div className="md:col-span-7 order-2 md:order-1">
-                <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-6 animate-fade-up">{data.title} · {data.contact.location.split(', ').slice(-2).join(', ')}</p>
+                <p className="text-xs uppercase tracking-[0.25em] text-sand mb-6 animate-fade-up">{data.title} · {data.contact.location.split(', ').slice(-2).join(', ')}</p>
                 <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl text-cream leading-[1.05] mb-8" aria-label={data.name}>
                     <SplitText text={data.name} />
                 </h1>
-                <p className="text-lg md:text-xl text-cream/70 font-light leading-relaxed max-w-xl mb-12 animate-fade-up [animation-delay:700ms]">
+                <p className="text-lg md:text-xl text-cream/85 font-light leading-relaxed max-w-xl mb-12 animate-fade-up [animation-delay:700ms]">
                     {data.tagline}
                 </p>
                 <div className="flex items-center gap-8 animate-fade-up [animation-delay:850ms]">
                     <div className="flex items-center gap-4">
                         <RoundArrow href="#projects" label="View projects" />
-                        <span className="text-sm text-cream/80">View my work</span>
+                        <span className="text-sm text-cream/90">View my work</span>
                     </div>
-                    <a href="#contact" className="text-sm text-cream/60 hover:text-cream border-b border-cream/30 hover:border-cream pb-1 transition-colors duration-300">
+                    <a href="#contact" className="text-sm text-cream/75 hover:text-cream border-b border-cream/40 hover:border-cream pb-1 transition-colors duration-300">
                         Get in touch
                     </a>
                 </div>
@@ -381,7 +381,7 @@ const Hero = ({ data }) => (
                     <div className="px-3 pt-5 pb-3 flex items-center justify-between gap-4">
                         <div>
                             <p className="font-serif text-xl text-cream">6+ years</p>
-                            <p className="text-xs text-cream/50 mt-1">Node.js · NestJS · Laravel</p>
+                            <p className="text-xs text-cream/65 mt-1">Node.js · NestJS · Laravel</p>
                         </div>
                         <div className="flex gap-2">
                             <IconLink Icon={Linkedin} href={data.contact.linkedin} label="LinkedIn" />
@@ -395,7 +395,7 @@ const Hero = ({ data }) => (
 );
 
 const IconLink = ({ Icon, href, label }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="w-10 h-10 rounded-full border border-line text-cream/70 hover:text-cream hover:border-cream/60 flex items-center justify-center transition-colors duration-300">
+    <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="w-10 h-10 rounded-full border border-line text-cream/85 hover:text-cream hover:border-cream/75 flex items-center justify-center transition-colors duration-300">
         <Icon size={16} strokeWidth={1.5} />
     </a>
 );
@@ -413,11 +413,11 @@ const Skills = ({ data }) => (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {data.skills.map((skill, i) => (
                 <div key={skill.category} data-reveal style={{ '--reveal-delay': `${(i % 4) * 90}ms` }} className="bg-panel rounded-2xl p-6 hover:bg-panel-hover transition-colors duration-300">
-                    <skill.icon size={20} strokeWidth={1.25} className="text-cream/60 mb-6" />
+                    <skill.icon size={20} strokeWidth={1.25} className="text-cream/75 mb-6" />
                     <h3 className="font-serif text-xl text-cream mb-4">{skill.category}</h3>
                     <ul className="space-y-2">
                         {skill.items.map((item) => (
-                            <li key={item} className="text-sm text-cream/60 font-light leading-snug">{item}</li>
+                            <li key={item} className="text-sm text-cream/75 font-light leading-snug">{item}</li>
                         ))}
                     </ul>
                 </div>
@@ -432,14 +432,14 @@ const Experience = ({ data }) => (
             {data.experience.map((job) => (
                 <li key={`${job.company}-${job.period}`} data-reveal className="grid md:grid-cols-12 gap-4 md:gap-10 py-10 border-b border-line">
                     <div className="md:col-span-3">
-                        <time className="text-xs uppercase tracking-[0.2em] text-cream/50">{job.period}</time>
+                        <time className="text-xs uppercase tracking-[0.2em] text-sand">{job.period}</time>
                     </div>
                     <div className="md:col-span-9">
                         <h3 className="font-serif text-2xl md:text-3xl text-cream">{job.title}</h3>
-                        <p className="text-sm text-cream/60 mt-2 mb-5">{job.company} · {job.location}</p>
+                        <p className="text-sm text-cream/75 mt-2 mb-5">{job.company} · {job.location}</p>
                         <ul className="space-y-3">
                             {job.description.map((desc) => (
-                                <li key={desc} className="text-cream/70 font-light leading-relaxed pl-5 relative before:content-[''] before:absolute before:left-0 before:top-[0.7em] before:w-2 before:h-px before:bg-cream/40">
+                                <li key={desc} className="text-cream/85 font-light leading-relaxed pl-5 relative before:content-[''] before:absolute before:left-0 before:top-[0.7em] before:w-2 before:h-px before:bg-cream/55">
                                     {desc}
                                 </li>
                             ))}
@@ -457,9 +457,9 @@ const Projects = ({ data }) => (
             {data.projects.map((project, i) => (
                 <article key={project.name} data-reveal style={{ '--reveal-delay': `${(i % 2) * 120}ms` }} className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
                     <h3 className="font-serif text-2xl text-cream mb-4">{project.name}</h3>
-                    <p className="text-cream/65 font-light leading-relaxed mb-8 grow">{project.description}</p>
+                    <p className="text-cream/80 font-light leading-relaxed mb-8 grow">{project.description}</p>
                     <div className="flex items-end justify-between gap-6">
-                        <p className="text-xs uppercase tracking-[0.15em] text-cream/45 leading-loose">
+                        <p className="text-xs uppercase tracking-[0.15em] text-cream/60 leading-loose">
                             {project.technologies.split(',').map((t) => t.trim()).join(' · ')}
                         </p>
                         {project.link !== '#' && <RoundArrow href={project.link} label={`Open ${project.name}`} external />}
@@ -476,8 +476,8 @@ const Education = ({ data }) => (
             {data.education.map((item) => (
                 <div key={item.degree} data-reveal className="py-8 border-b border-line">
                     <h3 className="font-serif text-xl text-cream">{item.degree}</h3>
-                    <p className="text-sm text-cream/60 mt-2">{item.school}</p>
-                    {item.period && <p className="text-xs uppercase tracking-[0.2em] text-cream/40 mt-3">{item.period}</p>}
+                    <p className="text-sm text-cream/75 mt-2">{item.school}</p>
+                    {item.period && <p className="text-xs uppercase tracking-[0.2em] text-cream/55 mt-3">{item.period}</p>}
                 </div>
             ))}
         </div>
@@ -487,9 +487,9 @@ const Education = ({ data }) => (
 const Contact = ({ data }) => (
     <section id="contact" className="max-w-6xl mx-auto px-6 py-24 md:py-32">
         <div data-reveal className="bg-panel rounded-[2rem] p-8 md:p-16">
-            <p className="text-xs uppercase tracking-[0.25em] text-cream/50 mb-6">Contact</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-sand mb-6">Contact</p>
             <h2 className="font-serif text-4xl md:text-6xl text-cream mb-6 max-w-3xl">Let's build something together.</h2>
-            <p className="text-cream/65 font-light text-lg max-w-2xl mb-12">
+            <p className="text-cream/80 font-light text-lg max-w-2xl mb-12">
                 I'm looking for full stack and backend roles in Dubai and the UAE. Feel free to reach out about a role or a project.
             </p>
             <div className="grid sm:grid-cols-3 gap-8 border-t border-line pt-10">
@@ -503,11 +503,11 @@ const Contact = ({ data }) => (
 
 const ContactItem = ({ Icon, label, text, href }) => (
     <div className="min-w-0">
-        <p className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-cream/45 mb-3">
+        <p className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-cream/60 mb-3">
             <Icon size={14} strokeWidth={1.5} /> {label}
         </p>
         {href ? (
-            <a href={href} className="text-cream hover:text-white break-words border-b border-transparent hover:border-cream/50 transition-colors duration-300">{text}</a>
+            <a href={href} className="text-cream hover:text-white break-words border-b border-transparent hover:border-cream/65 transition-colors duration-300">{text}</a>
         ) : (
             <p className="text-cream break-words">{text}</p>
         )}
@@ -516,7 +516,7 @@ const ContactItem = ({ Icon, label, text, href }) => (
 
 const Footer = ({ data }) => (
     <footer className="max-w-6xl mx-auto px-6 py-10 border-t border-line flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <p className="text-xs text-cream/40">&copy; {new Date().getFullYear()} {data.name}</p>
+        <p className="text-xs text-cream/55">&copy; {new Date().getFullYear()} {data.name}</p>
         <div className="flex gap-2">
             <IconLink Icon={Linkedin} href={data.contact.linkedin} label="LinkedIn" />
             <IconLink Icon={Github} href={data.contact.github} label="GitHub" />

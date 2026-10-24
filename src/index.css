@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #202326;
-  --color-panel: #2a2d31;
-  --color-panel-hover: #303338;
-  --color-line: #34383d;
-  --color-cream: #e8e4dc;
+  --color-ink: #2a2e33;
+  --color-panel: #353a40;
+  --color-panel-hover: #3d4249;
+  --color-line: #474c53;
+  --color-cream: #f4f0e8;
+  --color-sand: #d9bf94;
   --font-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
   --font-sans: "Jost", "Segoe UI", system-ui, sans-serif;
   --animate-fade-up: fade-up 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
