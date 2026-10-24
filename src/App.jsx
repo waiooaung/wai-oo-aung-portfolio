@@ -305,7 +305,7 @@ const Header = ({ name, links }) => {
     return (
         <header className={`fixed top-0 inset-x-0 z-50 transition-colors duration-500 ${scrolled ? 'bg-ink/90 backdrop-blur-md border-b border-line' : 'bg-transparent border-b border-transparent'}`}>
             <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-                <a href="#hero" className="font-serif text-2xl text-cream tracking-wide">{name}</a>
+                <a href="#hero" className="font-display text-2xl text-cream tracking-wide">{name}</a>
                 <nav className="hidden md:flex gap-10">
                     {links.map(({ id, label }) => (
                         <a key={id} href={`#${id}`} className="text-xs uppercase tracking-[0.2em] text-cream/75 hover:text-cream transition-colors duration-300">
@@ -334,7 +334,7 @@ const Section = ({ id, eyebrow, title, children }) => (
     <section id={id} className="max-w-6xl mx-auto px-6 py-24 md:py-32">
         <div data-reveal className="mb-14 md:mb-20">
             <p className="text-xs uppercase tracking-[0.25em] text-sand mb-4">{eyebrow}</p>
-            <h2 className="font-serif text-4xl md:text-5xl text-cream">{title}</h2>
+            <h2 className="font-display text-4xl md:text-5xl text-cream">{title}</h2>
         </div>
         {children}
     </section>
@@ -357,7 +357,7 @@ const Hero = ({ data }) => (
         <div className="grid md:grid-cols-12 gap-14 md:gap-10 items-center">
             <div className="md:col-span-7 order-2 md:order-1">
                 <p className="text-xs uppercase tracking-[0.25em] text-sand mb-6 animate-fade-up">{data.title} · {data.contact.location.split(', ').slice(-2).join(', ')}</p>
-                <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl text-cream leading-[1.05] mb-8" aria-label={data.name}>
+                <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl text-cream leading-[1.05] mb-8" aria-label={data.name}>
                     <SplitText text={data.name} />
                 </h1>
                 <p className="text-lg md:text-xl text-cream/85 font-light leading-relaxed max-w-xl mb-12 animate-fade-up [animation-delay:700ms]">
@@ -380,7 +380,7 @@ const Hero = ({ data }) => (
                     </div>
                     <div className="px-3 pt-5 pb-3 flex items-center justify-between gap-4">
                         <div>
-                            <p className="font-serif text-xl text-cream">6+ years</p>
+                            <p className="font-display text-xl text-cream">6+ years</p>
                             <p className="text-xs text-cream/65 mt-1">Node.js · NestJS · Laravel</p>
                         </div>
                         <div className="flex gap-2">
@@ -402,7 +402,7 @@ const IconLink = ({ Icon, href, label }) => (
 
 const About = ({ data }) => (
     <section id="about" className="max-w-6xl mx-auto px-6 py-16 md:py-24 border-t border-line">
-        <p data-reveal className="font-serif text-2xl md:text-4xl text-cream/90 leading-snug max-w-4xl">
+        <p data-reveal className="font-display text-2xl md:text-4xl text-cream/90 leading-snug max-w-4xl">
             {data.summary}
         </p>
     </section>
@@ -414,7 +414,7 @@ const Skills = ({ data }) => (
             {data.skills.map((skill, i) => (
                 <div key={skill.category} data-reveal style={{ '--reveal-delay': `${(i % 4) * 90}ms` }} className="bg-panel rounded-2xl p-6 hover:bg-panel-hover transition-colors duration-300">
                     <skill.icon size={20} strokeWidth={1.25} className="text-cream/75 mb-6" />
-                    <h3 className="font-serif text-xl text-cream mb-4">{skill.category}</h3>
+                    <h3 className="font-display text-xl text-cream mb-4">{skill.category}</h3>
                     <ul className="space-y-2">
                         {skill.items.map((item) => (
                             <li key={item} className="text-sm text-cream/75 font-light leading-snug">{item}</li>
@@ -435,7 +435,7 @@ const Experience = ({ data }) => (
                         <time className="text-xs uppercase tracking-[0.2em] text-sand">{job.period}</time>
                     </div>
                     <div className="md:col-span-9">
-                        <h3 className="font-serif text-2xl md:text-3xl text-cream">{job.title}</h3>
+                        <h3 className="font-display text-2xl md:text-3xl text-cream">{job.title}</h3>
                         <p className="text-sm text-cream/75 mt-2 mb-5">{job.company} · {job.location}</p>
                         <ul className="space-y-3">
                             {job.description.map((desc) => (
@@ -456,7 +456,7 @@ const Projects = ({ data }) => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.projects.map((project, i) => (
                 <article key={project.name} data-reveal style={{ '--reveal-delay': `${(i % 2) * 120}ms` }} className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
-                    <h3 className="font-serif text-2xl text-cream mb-4">{project.name}</h3>
+                    <h3 className="font-display text-2xl text-cream mb-4">{project.name}</h3>
                     <p className="text-cream/80 font-light leading-relaxed mb-8 grow">{project.description}</p>
                     <div className="flex items-end justify-between gap-6">
                         <p className="text-xs uppercase tracking-[0.15em] text-cream/60 leading-loose">
@@ -475,7 +475,7 @@ const Education = ({ data }) => (
         <div className="grid md:grid-cols-2 gap-x-10 border-t border-line">
             {data.education.map((item) => (
                 <div key={item.degree} data-reveal className="py-8 border-b border-line">
-                    <h3 className="font-serif text-xl text-cream">{item.degree}</h3>
+                    <h3 className="font-display text-xl text-cream">{item.degree}</h3>
                     <p className="text-sm text-cream/75 mt-2">{item.school}</p>
                     {item.period && <p className="text-xs uppercase tracking-[0.2em] text-cream/55 mt-3">{item.period}</p>}
                 </div>
@@ -488,7 +488,7 @@ const Contact = ({ data }) => (
     <section id="contact" className="max-w-6xl mx-auto px-6 py-24 md:py-32">
         <div data-reveal className="bg-panel rounded-[2rem] p-8 md:p-16">
             <p className="text-xs uppercase tracking-[0.25em] text-sand mb-6">Contact</p>
-            <h2 className="font-serif text-4xl md:text-6xl text-cream mb-6 max-w-3xl">Let's build something together.</h2>
+            <h2 className="font-display text-4xl md:text-6xl text-cream mb-6 max-w-3xl">Let's build something together.</h2>
             <p className="text-cream/80 font-light text-lg max-w-2xl mb-12">
                 I'm looking for full stack and backend roles in Dubai and the UAE. Feel free to reach out about a role or a project.
             </p>
