@@ -181,9 +181,12 @@ const prefersFinePointer = () =>
     window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// A small dot that follows the pointer, drawing a thin cream line behind it
+// A small dot that glides after the pointer, drawing a thin cream line behind it
 // that fades and tapers away. The dot grows over links and buttons.
-const TRAIL_LIFETIME = 450; // ms a point stays on the trail
+// The dot is eased toward the pointer every frame and the trail is sampled from
+// that eased position, so the line stays smooth even when mouse events are sparse.
+const TRAIL_LIFETIME = 500; // ms a point stays on the trail
+const FOLLOW = 0.35; // share of the remaining distance the dot covers per 60fps frame
 
 const Cursor = () => {
     const canvasRef = useRef(null);
@@ -198,6 +201,9 @@ const Cursor = () => {
         const ctx = canvas.getContext('2d');
         const points = [];
         const pos = { x: -100, y: -100 };
+        const head = { x: -100, y: -100 };
+        let placed = false;
+        let last = performance.now();
         let frame;
 
         const resize = () => {
@@ -211,35 +217,57 @@ const Cursor = () => {
         const onMove = (e) => {
             pos.x = e.clientX;
             pos.y = e.clientY;
-            points.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+            if (!placed) {
+                // Start the dot under the pointer instead of sliding in from a corner.
+                head.x = pos.x;
+                head.y = pos.y;
+                placed = true;
+            }
             const hover = !!e.target.closest('a, button');
             setState((prev) => (prev.hover === hover && !prev.hidden ? prev : { ...prev, hover, hidden: false }));
         };
         const onLeave = () => {
             points.length = 0;
+            placed = false;
             setState((prev) => ({ ...prev, hidden: true }));
         };
         const onDown = () => setState((prev) => ({ ...prev, down: true }));
         const onUp = () => setState((prev) => ({ ...prev, down: false }));
 
-        const tick = () => {
-            const now = performance.now();
+        const tick = (now) => {
+            const dt = Math.min(now - last, 64);
+            last = now;
+
+            // Frame-rate independent easing toward the pointer.
+            const k = 1 - Math.pow(1 - FOLLOW, dt / 16.67);
+            head.x += (pos.x - head.x) * k;
+            head.y += (pos.y - head.y) * k;
+
+            const prev = points[points.length - 1];
+            if (placed && (!prev || Math.hypot(head.x - prev.x, head.y - prev.y) > 0.5)) {
+                points.push({ x: head.x, y: head.y, t: now });
+            }
             while (points.length && now - points[0].t > TRAIL_LIFETIME) points.shift();
 
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            for (let i = 1; i < points.length; i++) {
-                const life = 1 - (now - points[i].t) / TRAIL_LIFETIME;
-                ctx.strokeStyle = `rgba(232, 228, 220, ${life * 0.85})`;
-                ctx.lineWidth = 0.5 + life * 2;
+            // Draw quadratic curves through the midpoints so the line has no corners.
+            for (let i = 1; i < points.length - 1; i++) {
+                const p0 = points[i - 1];
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const life = Math.max(0, 1 - (now - p1.t) / TRAIL_LIFETIME);
+                const eased = life * life * (3 - 2 * life);
+                ctx.strokeStyle = `rgba(232, 228, 220, ${eased * 0.85})`;
+                ctx.lineWidth = 0.4 + eased * 2.2;
                 ctx.beginPath();
-                ctx.moveTo(points[i - 1].x, points[i - 1].y);
-                ctx.lineTo(points[i].x, points[i].y);
+                ctx.moveTo((p0.x + p1.x) / 2, (p0.y + p1.y) / 2);
+                ctx.quadraticCurveTo(p1.x, p1.y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
                 ctx.stroke();
             }
 
-            if (dotRef.current) dotRef.current.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+            if (dotRef.current) dotRef.current.style.transform = `translate3d(${head.x}px, ${head.y}px, 0)`;
             frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
