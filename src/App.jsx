@@ -164,11 +164,11 @@ const useReveal = () => {
 const SplitText = ({ text }) => (
     <span aria-hidden="true" className="block">
         {text.split(' ').map((word, w, words) => (
-            <span key={w} className="inline-block overflow-hidden align-bottom pb-[0.08em]">
+            <span key={w} className="inline-block overflow-hidden align-bottom pt-[0.12em] -mt-[0.12em] pb-[0.08em]">
                 {[...word].map((ch, c) => {
                     const index = words.slice(0, w).join('').length + c;
                     return (
-                        <span key={c} className="inline-block animate-letter-rise" style={{ animationDelay: `${150 + index * 45}ms` }}>{ch}</span>
+                        <span key={c} className="inline-block animate-letter-rise" style={{ animationDelay: `${150 + index * 45}ms` }}><span className="name-letter">{ch}</span></span>
                     );
                 })}
                 {w < words.length - 1 && <span className="inline-block">&nbsp;</span>}
@@ -181,18 +181,34 @@ const prefersFinePointer = () =>
     window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// A small dot that glides after the pointer, drawing a thin cream line behind it
-// that fades and tapers away. The dot grows over links and buttons.
-// The dot is eased toward the pointer every frame and the trail is sampled from
-// that eased position, so the line stays smooth even when mouse events are sparse.
+// The custom cursor has three layers:
+// 1. A small dot that glides after the pointer, drawing a thin cream line behind it
+//    that fades and tapers away.
+// 2. A ring that follows a little later. Over a link or button it lets go of the
+//    pointer and turns into four corner marks that frame the element, like a
+//    selection on a drawing. Elements with data-cursor="Label" grow it into a
+//    filled disc with that label instead.
+// 3. A small x / y readout beside the pointer, in the sand accent.
+// Everything is eased every frame, so movement stays smooth even when mouse
+// events are sparse.
 const TRAIL_LIFETIME = 500; // ms a point stays on the trail
 const FOLLOW = 0.35; // share of the remaining distance the dot covers per 60fps frame
+const RING_FOLLOW = 0.16; // the ring trails behind the dot
+const SNAP_FOLLOW = 0.28; // and moves a bit faster when it frames a target
+const RING_SIZE = 34;
+const LABEL_SIZE = 88;
+const FRAME_PAD = 8;
+
+const ease = (k, dt) => 1 - Math.pow(1 - k, dt / 16.67);
+const pad4 = (n) => String(Math.max(0, Math.round(n))).padStart(4, '0');
 
 const Cursor = () => {
     const canvasRef = useRef(null);
     const dotRef = useRef(null);
+    const ringRef = useRef(null);
+    const coordRef = useRef(null);
     const [enabled] = useState(prefersFinePointer);
-    const [state, setState] = useState({ hover: false, hidden: true, down: false });
+    const [state, setState] = useState({ mode: 'idle', label: '', hidden: true, down: false });
 
     useEffect(() => {
         if (!enabled) return;
@@ -202,6 +218,10 @@ const Cursor = () => {
         const points = [];
         const pos = { x: -100, y: -100 };
         const head = { x: -100, y: -100 };
+        const ring = { x: -100, y: -100, w: RING_SIZE, h: RING_SIZE, r: RING_SIZE / 2 };
+        let target = null; // element the ring is framing or labelling
+        let targetRadius = 0;
+        let mode = 'idle';
         let placed = false;
         let last = performance.now();
         let frame;
@@ -214,34 +234,75 @@ const Cursor = () => {
         };
         resize();
 
+        const pick = (el) => {
+            const labelled = el?.closest?.('[data-cursor]');
+            const snap = el?.closest?.('a, button');
+            const next = labelled || snap || null;
+            if (next === target) return;
+            target = next;
+            mode = labelled ? 'label' : snap ? 'snap' : 'idle';
+            if (snap && !labelled) {
+                const r = snap.getBoundingClientRect();
+                const radius = parseFloat(getComputedStyle(snap).borderTopLeftRadius) || 0;
+                // Round buttons stay round; everything else gets soft corners.
+                targetRadius = radius >= Math.min(r.width, r.height) / 2 - 1 ? 999 : radius + FRAME_PAD;
+            }
+            setState((prev) => ({ ...prev, mode, label: labelled?.dataset.cursor || '' }));
+        };
+
         const onMove = (e) => {
             pos.x = e.clientX;
             pos.y = e.clientY;
             if (!placed) {
-                // Start the dot under the pointer instead of sliding in from a corner.
-                head.x = pos.x;
-                head.y = pos.y;
+                // Start under the pointer instead of sliding in from a corner.
+                head.x = ring.x = pos.x;
+                head.y = ring.y = pos.y;
                 placed = true;
             }
-            const hover = !!e.target.closest('a, button');
-            setState((prev) => (prev.hover === hover && !prev.hidden ? prev : { ...prev, hover, hidden: false }));
+            pick(e.target);
+            setState((prev) => (prev.hidden ? { ...prev, hidden: false } : prev));
         };
+        // Scrolling moves the page under a still pointer, so look again.
+        const onScroll = () => placed && pick(document.elementFromPoint(pos.x, pos.y));
         const onLeave = () => {
             points.length = 0;
             placed = false;
+            pick(null);
             setState((prev) => ({ ...prev, hidden: true }));
         };
         const onDown = () => setState((prev) => ({ ...prev, down: true }));
         const onUp = () => setState((prev) => ({ ...prev, down: false }));
 
+        let lastCoord = '';
         const tick = (now) => {
             const dt = Math.min(now - last, 64);
             last = now;
 
-            // Frame-rate independent easing toward the pointer.
-            const k = 1 - Math.pow(1 - FOLLOW, dt / 16.67);
+            const k = ease(FOLLOW, dt);
             head.x += (pos.x - head.x) * k;
             head.y += (pos.y - head.y) * k;
+
+            // Where the ring wants to be.
+            let tx = pos.x, ty = pos.y, tw = RING_SIZE, th = RING_SIZE, tr = RING_SIZE / 2, follow = RING_FOLLOW;
+            if (mode === 'snap' && target?.isConnected) {
+                const r = target.getBoundingClientRect();
+                tx = r.left + r.width / 2;
+                ty = r.top + r.height / 2;
+                tw = r.width + FRAME_PAD * 2;
+                th = r.height + FRAME_PAD * 2;
+                tr = targetRadius === 999 ? Math.min(tw, th) / 2 : targetRadius;
+                follow = SNAP_FOLLOW;
+            } else if (mode === 'label') {
+                tw = th = LABEL_SIZE;
+                tr = LABEL_SIZE / 2;
+            }
+            const rk = ease(follow, dt);
+            const sk = ease(0.22, dt);
+            ring.x += (tx - ring.x) * rk;
+            ring.y += (ty - ring.y) * rk;
+            ring.w += (tw - ring.w) * sk;
+            ring.h += (th - ring.h) * sk;
+            ring.r += (tr - ring.r) * sk;
 
             const prev = points[points.length - 1];
             if (placed && (!prev || Math.hypot(head.x - prev.x, head.y - prev.y) > 0.5)) {
@@ -268,12 +329,28 @@ const Cursor = () => {
             }
 
             if (dotRef.current) dotRef.current.style.transform = `translate3d(${head.x}px, ${head.y}px, 0)`;
+            if (ringRef.current) {
+                const s = ringRef.current.style;
+                s.transform = `translate3d(${ring.x - ring.w / 2}px, ${ring.y - ring.h / 2}px, 0)`;
+                s.width = `${ring.w}px`;
+                s.height = `${ring.h}px`;
+                s.borderRadius = `${ring.r}px`;
+            }
+            if (coordRef.current) {
+                coordRef.current.style.transform = `translate3d(${head.x + 22}px, ${head.y + 20}px, 0)`;
+                const text = `X ${pad4(pos.x)}  Y ${pad4(pos.y + window.scrollY)}`;
+                if (text !== lastCoord) {
+                    coordRef.current.textContent = text;
+                    lastCoord = text;
+                }
+            }
             frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
 
         window.addEventListener('resize', resize);
         window.addEventListener('mousemove', onMove, { passive: true });
+        window.addEventListener('scroll', onScroll, { passive: true });
         document.addEventListener('mouseleave', onLeave);
         window.addEventListener('mousedown', onDown);
         window.addEventListener('mouseup', onUp);
@@ -282,6 +359,7 @@ const Cursor = () => {
             document.documentElement.classList.remove('has-custom-cursor');
             window.removeEventListener('resize', resize);
             window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('scroll', onScroll);
             document.removeEventListener('mouseleave', onLeave);
             window.removeEventListener('mousedown', onDown);
             window.removeEventListener('mouseup', onUp);
@@ -290,16 +368,56 @@ const Cursor = () => {
 
     if (!enabled) return null;
 
-    const dotSize = state.hover ? 'w-4 h-4 bg-cream/90' : 'w-2 h-2 bg-cream';
+    const { mode, label, hidden, down } = state;
+    const dotClass = mode === 'label' ? 'w-0 h-0' : mode === 'snap' ? 'w-1.5 h-1.5' : 'w-2 h-2';
     return (
-        <div aria-hidden="true" className={`pointer-events-none fixed inset-0 z-[100] transition-opacity duration-300 ${state.hidden ? 'opacity-0' : 'opacity-100'}`}>
+        <div aria-hidden="true" className={`pointer-events-none fixed inset-0 z-[100] transition-opacity duration-300 ${hidden ? 'opacity-0' : 'opacity-100'}`}>
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-            <div ref={dotRef} className="absolute top-0 left-0">
-                <div className={`-translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ease-out ${dotSize} ${state.down ? 'scale-75' : 'scale-100'}`} />
+            <div ref={ringRef} className={`cursor-ring absolute top-0 left-0 is-${mode} ${down ? 'is-down' : ''}`}>
+                <span className="cursor-corner tl" />
+                <span className="cursor-corner tr" />
+                <span className="cursor-corner bl" />
+                <span className="cursor-corner br" />
+                <span className="cursor-label">{label}</span>
             </div>
+            <div ref={dotRef} className="absolute top-0 left-0">
+                <div className={`-translate-x-1/2 -translate-y-1/2 rounded-full bg-cream transition-all duration-300 ease-out ${dotClass} ${down ? 'scale-75' : 'scale-100'}`} />
+            </div>
+            <div
+                ref={coordRef}
+                className={`absolute top-0 left-0 whitespace-pre text-[10px] tracking-[0.2em] text-sand/80 transition-opacity duration-300 ${mode === 'idle' ? 'opacity-100' : 'opacity-0'}`}
+            />
         </div>
     );
 };
+
+// Cards marked data-spotlight get a soft light and a sand edge that follow the pointer.
+const useSpotlight = () => {
+    useEffect(() => {
+        if (!prefersFinePointer()) return;
+        const onMove = (e) => {
+            const el = e.target.closest?.('[data-spotlight]');
+            if (!el) return;
+            const r = el.getBoundingClientRect();
+            el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+            el.style.setProperty('--my', `${e.clientY - r.top}px`);
+        };
+        window.addEventListener('mousemove', onMove, { passive: true });
+        return () => window.removeEventListener('mousemove', onMove);
+    }, []);
+};
+
+// Nav labels roll their letters up on hover, one after another.
+const RollText = ({ text }) => (
+    <>
+        <span className="sr-only">{text}</span>
+        <span aria-hidden="true" className="roll">
+            {[...text].map((ch, i) => (
+                <span key={i} data-ch={ch} style={{ '--i': i }}>{ch}</span>
+            ))}
+        </span>
+    </>
+);
 
 // Buttons marked data-magnetic lean toward the pointer when it comes close.
 const useMagnetic = () => {
@@ -337,7 +455,7 @@ const Header = ({ name, links }) => {
                 <nav className="hidden md:flex gap-10">
                     {links.map(({ id, label }) => (
                         <a key={id} href={`#${id}`} className="text-xs uppercase tracking-[0.2em] text-cream/75 hover:text-cream transition-colors duration-300">
-                            {label}
+                            <RollText text={label} />
                         </a>
                     ))}
                 </nav>
@@ -349,7 +467,7 @@ const Header = ({ name, links }) => {
                 <nav className="md:hidden bg-ink border-t border-line px-6 py-4 flex flex-col">
                     {links.map(({ id, label }) => (
                         <a key={id} href={`#${id}`} onClick={() => setIsOpen(false)} className="py-3 text-sm uppercase tracking-[0.2em] text-cream/85 hover:text-cream">
-                            {label}
+                            <RollText text={label} />
                         </a>
                     ))}
                 </nav>
@@ -396,13 +514,13 @@ const Hero = ({ data }) => (
                         <RoundArrow href="#projects" label="View projects" />
                         <span className="text-sm text-cream/90">View my work</span>
                     </div>
-                    <a href="#contact" className="text-sm text-cream/75 hover:text-cream border-b border-cream/40 hover:border-cream pb-1 transition-colors duration-300">
+                    <a href="#contact" className="link-sweep text-sm text-cream/75 hover:text-cream pb-1 transition-colors duration-300">
                         Get in touch
                     </a>
                 </div>
             </div>
             <div className="md:col-span-5 order-1 md:order-2 animate-fade-up [animation-delay:200ms]">
-                <div className="group mx-auto max-w-[15rem] md:max-w-[19rem] rounded-[2rem] bg-panel p-3 shadow-2xl shadow-black/40">
+                <div data-cursor="Hello" className="group mx-auto max-w-[15rem] md:max-w-[19rem] rounded-[2rem] bg-panel p-3 shadow-2xl shadow-black/40">
                     <div className="rounded-[1.5rem] bg-ink overflow-hidden aspect-[4/5] animate-photo-reveal [animation-delay:300ms]">
                         <img src={profilePhoto} alt={data.name} className="w-full h-full object-cover object-top grayscale scale-105 group-hover:scale-100 transition-transform duration-[1200ms] ease-out" />
                     </div>
@@ -440,7 +558,7 @@ const Skills = ({ data }) => (
     <Section id="skills" eyebrow="What I work with" title="Skills">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {data.skills.map((skill, i) => (
-                <div key={skill.category} data-reveal style={{ '--reveal-delay': `${(i % 4) * 90}ms` }} className="bg-panel rounded-2xl p-6 hover:bg-panel-hover transition-colors duration-300">
+                <div key={skill.category} data-reveal data-spotlight style={{ '--reveal-delay': `${(i % 4) * 90}ms` }} className="bg-panel rounded-2xl p-6 hover:bg-panel-hover transition-colors duration-300">
                     <skill.icon size={20} strokeWidth={1.25} className="text-cream/75 mb-6" />
                     <h3 className="font-display text-xl text-cream mb-4">{skill.category}</h3>
                     <ul className="space-y-2">
@@ -483,7 +601,7 @@ const Projects = ({ data }) => (
     <Section id="projects" eyebrow="Selected work" title="Projects">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.projects.map((project, i) => (
-                <article key={project.name} data-reveal style={{ '--reveal-delay': `${(i % 2) * 120}ms` }} className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
+                <article key={project.name} data-reveal data-spotlight style={{ '--reveal-delay': `${(i % 2) * 120}ms` }} className="group bg-panel rounded-2xl p-8 flex flex-col hover:bg-panel-hover transition-colors duration-300">
                     <h3 className="font-display text-2xl text-cream mb-4">{project.name}</h3>
                     <p className="text-cream/80 font-light leading-relaxed mb-8 grow">{project.description}</p>
                     <div className="flex items-end justify-between gap-6">
@@ -514,7 +632,7 @@ const Education = ({ data }) => (
 
 const Contact = ({ data }) => (
     <section id="contact" className="max-w-6xl mx-auto px-6 py-24 md:py-32">
-        <div data-reveal className="bg-panel rounded-[2rem] p-8 md:p-16">
+        <div data-reveal data-spotlight className="bg-panel rounded-[2rem] p-8 md:p-16">
             <p className="text-xs uppercase tracking-[0.25em] text-sand mb-6">Contact</p>
             <h2 className="font-display text-4xl md:text-6xl text-cream mb-6 max-w-3xl">Let's build something together.</h2>
             <p className="text-cream/80 font-light text-lg max-w-2xl mb-12">
@@ -535,7 +653,7 @@ const ContactItem = ({ Icon, label, text, href }) => (
             <Icon size={14} strokeWidth={1.5} /> {label}
         </p>
         {href ? (
-            <a href={href} className="text-cream hover:text-white break-words border-b border-transparent hover:border-cream/65 transition-colors duration-300">{text}</a>
+            <a href={href} className="link-sweep text-cream hover:text-white break-words pb-0.5 transition-colors duration-300">{text}</a>
         ) : (
             <p className="text-cream break-words">{text}</p>
         )}
@@ -574,6 +692,7 @@ const App = () => {
 
     useReveal();
     useMagnetic();
+    useSpotlight();
 
     return (
         <div className="min-h-screen bg-ink text-cream font-sans antialiased">
